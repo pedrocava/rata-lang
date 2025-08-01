@@ -27,6 +27,6 @@ module ExampleModule {
   square = __module__.powerfac(2)
   four = __module__.powerfac(2)(2) # currying allowed
   sixty_four = 8
-    \> __module__.square()
+    |> __module__.square()
 
 }

@@ -15,6 +15,7 @@ Preferably most of this is implemented in Rata itself.
 - [ ] Dataload: Utilities to read data from most used file formats like csv, xls, txt, delimited data, dta, arrow, etc.
 - [ ] Datetime: Pretty much the same api as R's lubridate.
 - [ ] Process: Wrapper around elixir's process module.
+- [ ] Tests: Wrapper around Elixir's test tooling.
 - [ ] Json: json toolkit.
 - [ ] Macro: A macro programming toolkit.
 - [ ] Struct: Wrapper around Elixir's Struct functionality.

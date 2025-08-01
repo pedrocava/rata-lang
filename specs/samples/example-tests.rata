@@ -1,0 +1,22 @@
+library ExampleModule as em
+
+module "ExampleModuleTests" {
+  
+  assert em.pi > 3.13
+  assert em.pi < 3.15
+  
+  assert em.fibonacci(1) == 1
+  assert em.fibonacci(2) == 1
+  assert em.fibonacci(3) == 2
+  assert em.fibonacci(4) == 3
+  assert em.fibonacci(5) == 5
+  assert em.fibonacci(6) == 8
+  assert em.fibonacci(7) == 13
+  assert em.fibonacci(8) == 21
+  assert em.fibonacci(9) == 34
+  assert em.fibonacci(10) == 55
+
+  assert em.square(2) == 4
+  assert em.powerfac(2)(3) == 8
+
+}
