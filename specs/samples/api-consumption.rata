@@ -1,0 +1,23 @@
+library Datetime as dt
+library PLACEHOLDER_HTTP_REQ_LIB_NAME as req
+
+token = get_env("api_token")
+
+my_headers = {
+  header1: "oh boy look at me I'm a header",
+  authorization: f"Bearer {token}",
+  accept: "application/json"
+}
+
+my_payload = {
+  field: "value",
+  another_field: :symbol, # sent as a string
+  stuff = {
+    key: "val",
+    what: "this is another map!
+    }
+  }
+
+req.POST(get_env(f"{API_URL}/some_endpoint"), my_payload, my_headers)
+
+
