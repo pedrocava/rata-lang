@@ -78,14 +78,23 @@ defmodule RataParser.Parser do
     )
     |> reduce({__MODULE__, :build_binary_ops, [:comparison]})
 
-  # Additive expressions
+  # Additive expressions (includes ranges)  
   additive_expression = 
-    parsec(:multiplicative_expression)
+    parsec(:range_expression)
     |> repeat(
       choice([tag(:plus), tag(:minus)])
-      |> parsec(:multiplicative_expression)
+      |> parsec(:range_expression)
     )
     |> reduce({__MODULE__, :build_binary_ops, [:additive]})
+
+  # Range expressions
+  range_expression = 
+    parsec(:multiplicative_expression)
+    |> optional(
+      tag(:range)
+      |> parsec(:multiplicative_expression)
+    )
+    |> reduce({__MODULE__, :build_range_if_present, []})
 
   # Multiplicative expressions  
   multiplicative_expression = 
@@ -110,7 +119,9 @@ defmodule RataParser.Parser do
     choice([
       literal(),
       symbol(),
-      tuple(),
+      set(),
+      vector(),
+      brace_expression(),
       lambda_expression(),
       lambda_parameter(),
       identifier(),
@@ -133,9 +144,9 @@ defmodule RataParser.Parser do
   symbol = 
     unwrap_and_tag(tag(:symbol), :name) |> map({__MODULE__, :build_symbol, []})
 
-  # Tuples
-  tuple = 
-    ignore(tag(:left_brace))
+  # Sets
+  set = 
+    ignore(tag(:set_start))
     |> optional(
       parsec(:expression)
       |> repeat(
@@ -144,7 +155,58 @@ defmodule RataParser.Parser do
       )
     )
     |> ignore(tag(:right_brace))
-    |> reduce({__MODULE__, :build_tuple, []})
+    |> reduce({__MODULE__, :build_set, []})
+
+  # Vectors/Lists
+  vector = 
+    ignore(tag(:left_bracket))
+    |> optional(
+      parsec(:expression)
+      |> repeat(
+        ignore(tag(:comma))
+        |> parsec(:expression)
+      )
+    )
+    |> ignore(tag(:right_bracket))
+    |> reduce({__MODULE__, :build_vector, []})
+
+  # Ranges will be handled in additive expressions for proper precedence
+
+  # Brace expressions - can be either maps or tuples
+  # Maps have key: value syntax, tuples are positional
+  brace_expression = 
+    ignore(tag(:left_brace))
+    |> optional(
+      choice([
+        # Try map syntax first (key: value)
+        parsec(:key_value_pair)
+        |> repeat(
+          ignore(tag(:comma))
+          |> parsec(:key_value_pair)
+        )
+        |> tag(:map_content),
+        # Fall back to tuple syntax (positional)
+        parsec(:expression)
+        |> repeat(
+          ignore(tag(:comma))
+          |> parsec(:expression)
+        )
+        |> tag(:tuple_content)
+      ])
+    )
+    |> ignore(tag(:right_brace))
+    |> reduce({__MODULE__, :build_brace_expression, []})
+
+  # Key-value pairs for maps
+  key_value_pair = 
+    parsec(:expression)
+    |> ignore(tag(:colon))
+    |> parsec(:expression)
+    |> wrap()
+
+  # Helper aliases for compatibility
+  map = brace_expression
+  tuple = brace_expression
 
   # Lambda expressions: ~ .x + .y
   lambda_expression = 
@@ -239,6 +301,7 @@ defmodule RataParser.Parser do
   defparsec :statement, statement()
   defparsec :expression, expression()
   defparsec :parameter_list, parameter_list
+  defparsec :key_value_pair, key_value_pair
   
   # REPL parser entry point - handles both statements and expressions
   defparsec :repl_parse, choice([statement(), expression()]) |> eos()
@@ -275,6 +338,44 @@ defmodule RataParser.Parser do
 
   def build_symbol([{:name, name}]) do
     %AST.Symbol{name: name}
+  end
+
+  def build_set(elements) do
+    %AST.Set{elements: List.flatten(elements)}
+  end
+
+  def build_vector(elements) do
+    %AST.Vector{elements: List.flatten(elements)}
+  end
+
+  def build_range([start, :range, end_expr]) do
+    %AST.Range{start: start, end: end_expr}
+  end
+
+  def build_range_if_present([start, :range, end_expr]) do
+    %AST.Range{start: start, end: end_expr}
+  end
+  def build_range_if_present([expr]), do: expr
+
+  def build_brace_expression([]) do
+    # Empty braces default to empty tuple
+    %AST.Tuple{elements: []}
+  end
+
+  def build_brace_expression([{:map_content, pairs}]) do
+    # Convert wrapped key-value pairs to tuples
+    converted_pairs = Enum.map(pairs, fn [key, value] -> {key, value} end)
+    %AST.Map{pairs: converted_pairs}
+  end
+
+  def build_brace_expression([{:tuple_content, elements}]) do
+    %AST.Tuple{elements: List.flatten(elements)}
+  end
+
+  def build_map(pairs) do
+    # Convert wrapped pairs to tuples
+    converted_pairs = Enum.map(pairs, fn [key, value] -> {key, value} end)
+    %AST.Map{pairs: converted_pairs}
   end
 
   def build_tuple(elements) do

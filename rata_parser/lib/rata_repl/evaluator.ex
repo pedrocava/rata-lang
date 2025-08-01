@@ -118,6 +118,64 @@ defmodule RataRepl.Evaluator do
     {:error, "if expressions not yet implemented"}
   end
 
+  # Sets - create MapSet from evaluated elements
+  def eval(%AST.Set{elements: elements}, context) do
+    case eval_list(elements, context) do
+      {:ok, values, final_context} ->
+        set = MapSet.new(values)
+        {:ok, set, final_context}
+      error -> error
+    end
+  end
+
+  # Vectors - create list from evaluated elements
+  def eval(%AST.Vector{elements: elements}, context) do
+    case eval_list(elements, context) do
+      {:ok, values, final_context} ->
+        {:ok, values, final_context}
+      error -> error
+    end
+  end
+
+  # Ranges - create Elixir Range from evaluated start and end
+  def eval(%AST.Range{start: start_ast, end: end_ast}, context) do
+    with {:ok, start_val, context1} <- eval(start_ast, context),
+         {:ok, end_val, context2} <- eval(end_ast, context1) do
+      case {start_val, end_val} do
+        {start, end_val} when is_integer(start) and is_integer(end_val) ->
+          range = Range.new(start, end_val)
+          {:ok, range, context2}
+        _ ->
+          {:error, "range bounds must be integers"}
+      end
+    end
+  end
+
+  # Maps - create Elixir Map from evaluated key-value pairs
+  def eval(%AST.Map{pairs: pairs}, context) do
+    case eval_map_pairs(pairs, context, []) do
+      {:ok, evaluated_pairs, final_context} ->
+        map = Map.new(evaluated_pairs)
+        {:ok, map, final_context}
+      error -> error
+    end
+  end
+
+  # Tuples - keep existing implementation but ensure it's handled
+  def eval(%AST.Tuple{elements: elements}, context) do
+    case eval_list(elements, context) do
+      {:ok, values, final_context} ->
+        tuple = List.to_tuple(values)
+        {:ok, tuple, final_context}
+      error -> error
+    end
+  end
+
+  # Symbols - keep existing implementation  
+  def eval(%AST.Symbol{name: name}, context) do
+    {:ok, String.to_atom(name), context}
+  end
+
   # Fallback for unhandled AST nodes
   def eval(ast, _context) do
     {:error, "evaluation not implemented for #{inspect(ast.__struct__)}"}
@@ -228,6 +286,30 @@ defmodule RataRepl.Evaluator do
         string_value = to_string(value)
         eval_f_string_parts(rest, new_context, [string_value | acc])
       error -> error
+    end
+  end
+
+  # Helper function to evaluate a list of expressions
+  defp eval_list([], context), do: {:ok, [], context}
+  defp eval_list([expr | rest], context) do
+    case eval(expr, context) do
+      {:ok, value, new_context} ->
+        case eval_list(rest, new_context) do
+          {:ok, values, final_context} -> {:ok, [value | values], final_context}
+          error -> error
+        end
+      error -> error
+    end
+  end
+
+  # Helper function to evaluate map key-value pairs
+  defp eval_map_pairs([], context, acc) do
+    {:ok, Enum.reverse(acc), context}
+  end
+  defp eval_map_pairs([{key_ast, value_ast} | rest], context, acc) do
+    with {:ok, key, context1} <- eval(key_ast, context),
+         {:ok, value, context2} <- eval(value_ast, context1) do
+      eval_map_pairs(rest, context2, [{key, value} | acc])
     end
   end
 

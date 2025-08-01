@@ -10,6 +10,10 @@ A comprehensive implementation plan for building the Rata programming language f
 - [ ] Implement pattern matching syntax (`case` expressions with `{:ok, value}` matching)
 - [x] Add tuple/symbol syntax (`{:ok, value}`, `{:error, message}`) - COMPLETED
 - [x] Support lambda syntax (`~ .x + .y`) - COMPLETED
+- [x] Add set syntax (`#{1, 2, 3}`) - COMPLETED
+- [x] Add vector/list syntax (`[1, 2, 3]`) - COMPLETED  
+- [x] Add range syntax (`1..10`) - COMPLETED
+- [x] Add map/dictionary syntax (`{key: value}`) - COMPLETED
 - [ ] Add string interpolation (`f"Results: {table}"`)
 - [ ] Implement proper type annotations (`posint`, `numeric`)
 - [ ] Add `return` statement support
@@ -26,9 +30,9 @@ A comprehensive implementation plan for building the Rata programming language f
 **Goal: Implement Rata's data-first philosophy**
 
 ### 2.1 Foundation Types
-- [ ] **Vector**: 1-indexed vectors (no scalars concept)
+- [x] **Vector**: 1-indexed vectors (no scalars concept) - BASIC SYNTAX COMPLETED
 - [ ] **List**: Linked lists with functional operations
-- [ ] **Maps**: Key-value data structures with R-like operations
+- [x] **Maps**: Key-value data structures with R-like operations - BASIC SYNTAX COMPLETED
 - [ ] **Enum**: Generic operations (map, reduce, keep, discard, every, some, none)
 
 ### 2.2 Data Manipulation

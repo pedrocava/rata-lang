@@ -37,11 +37,13 @@ defmodule RataParser.Lexer do
   # Operators
   pipe_op = string("\\>") |> replace(:pipe)
   lambda_op = string("~") |> replace(:lambda)
+  range_op = string("..") |> replace(:range)
   
   operators = 
     choice([
       pipe_op,
       lambda_op,
+      range_op,
       string("<=") |> replace(:less_equal),
       string("=") |> replace(:assign),
       string("+") |> replace(:plus),
@@ -52,10 +54,15 @@ defmodule RataParser.Lexer do
     ])
 
   # Delimeters
+  set_start = string("#{") |> replace(:set_start)
+  
   delimiters = 
     choice([
+      set_start,
       string("{") |> replace(:left_brace),
       string("}") |> replace(:right_brace),
+      string("[") |> replace(:left_bracket),
+      string("]") |> replace(:right_bracket),
       string("(") |> replace(:left_paren),
       string(")") |> replace(:right_paren),
       string(":") |> replace(:colon),

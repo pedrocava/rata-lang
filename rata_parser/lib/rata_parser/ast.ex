@@ -60,6 +60,30 @@ defmodule RataParser.AST do
     @type t :: %__MODULE__{elements: [Expression.t()]}
   end
 
+  defmodule Set do
+    @moduledoc "Represents set literals: #{1, 2, 3}"
+    defstruct [:elements]
+    @type t :: %__MODULE__{elements: [Expression.t()]}
+  end
+
+  defmodule Vector do
+    @moduledoc "Represents vector/list literals: [1, 2, 3]"
+    defstruct [:elements]
+    @type t :: %__MODULE__{elements: [Expression.t()]}
+  end
+
+  defmodule Range do
+    @moduledoc "Represents range expressions: 1..10"
+    defstruct [:start, :end]
+    @type t :: %__MODULE__{start: Expression.t(), end: Expression.t()}
+  end
+
+  defmodule Map do
+    @moduledoc "Represents map literals with key-value pairs: {key: value, key2: value2}"
+    defstruct [:pairs]
+    @type t :: %__MODULE__{pairs: [{Expression.t(), Expression.t()}]}
+  end
+
   defmodule Identifier do
     @moduledoc "Represents identifiers: variable names, function names"
     defstruct [:name]
@@ -132,6 +156,10 @@ defmodule RataParser.AST do
           | InterpolatedString.t()
           | Symbol.t()
           | Tuple.t()
+          | Set.t()
+          | Vector.t()
+          | Range.t()
+          | Map.t()
           | Identifier.t()
           | QualifiedIdentifier.t()
           | FunctionCall.t()
