@@ -42,6 +42,18 @@ defmodule RataParser.AST do
     @type t :: %__MODULE__{value: number() | String.t()}
   end
 
+  defmodule Symbol do
+    @moduledoc "Represents symbol literals: :ok, :error, :info"
+    defstruct [:name]
+    @type t :: %__MODULE__{name: String.t()}
+  end
+
+  defmodule Tuple do
+    @moduledoc "Represents tuple literals: {1, 2, 3}, {:ok, value}"
+    defstruct [:elements]
+    @type t :: %__MODULE__{elements: [Expression.t()]}
+  end
+
   defmodule Identifier do
     @moduledoc "Represents identifiers: variable names, function names"
     defstruct [:name]
@@ -99,6 +111,8 @@ defmodule RataParser.AST do
   @type Statement :: LibraryImport.t() | Assignment.t() | FunctionDef.t() | Return.t()
   @type Expression ::
           Literal.t()
+          | Symbol.t()
+          | Tuple.t()
           | Identifier.t()
           | QualifiedIdentifier.t()
           | FunctionCall.t()

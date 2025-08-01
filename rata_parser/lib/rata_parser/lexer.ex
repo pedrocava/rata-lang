@@ -79,6 +79,14 @@ defmodule RataParser.Lexer do
   # Special identifiers
   module_ref = string("__module__") |> replace({:module_ref, "__module__"})
 
+  # Symbols
+  symbol = 
+    string(":")
+    |> ascii_char([?a..?z, ?A..?Z, ?_])
+    |> repeat(ascii_char([?a..?z, ?A..?Z, ?0..?9, ?_]))
+    |> reduce({__MODULE__, :to_symbol, []})
+    |> unwrap_and_tag(:symbol)
+
   # Regular identifiers
   identifier = 
     ascii_char([?a..?z, ?A..?Z, ?_])
@@ -92,6 +100,7 @@ defmodule RataParser.Lexer do
       float,
       integer,
       keywords,
+      symbol,
       module_ref,
       identifier,
       operators,
@@ -120,5 +129,10 @@ defmodule RataParser.Lexer do
     parts
     |> Enum.join("")
     |> String.to_float()
+  end
+
+  def to_symbol([_colon | rest]) do
+    rest
+    |> Enum.join("")
   end
 end

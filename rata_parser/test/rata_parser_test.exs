@@ -33,6 +33,20 @@ defmodule RataParserTest do
                Lexer.tokenize("__module__")
     end
 
+    test "tokenizes symbols" do
+      assert {:ok, [symbol: "ok"], "", %{}, {1, 0}, 3} = 
+               Lexer.tokenize(":ok")
+      assert {:ok, [symbol: "error"], "", %{}, {1, 0}, 6} = 
+               Lexer.tokenize(":error")
+      assert {:ok, [symbol: "info_123"], "", %{}, {1, 0}, 9} = 
+               Lexer.tokenize(":info_123")
+    end
+
+    test "tokenizes tuple delimiters" do
+      assert {:ok, [:left_brace, :right_brace], "", %{}, {1, 0}, 2} = 
+               Lexer.tokenize("{}")
+    end
+
     test "tokenizes library import keywords" do
       assert {:ok, [:library, {:identifier, "ExampleModule"}, :as, {:identifier, "em"}], "", %{}, {1, 0}, _} = 
                Lexer.tokenize("library ExampleModule as em")
@@ -147,6 +161,77 @@ defmodule RataParserTest do
         }
       } = assignment
     end
+
+    test "parses symbols" do
+      tokens = [
+        :module, {:identifier, "Test"}, :left_brace,
+        {:identifier, "status"}, :assign, {:symbol, "ok"},
+        :right_brace
+      ]
+      
+      assert {:ok, ast, "", %{}, _, _} = Parser.parse(tokens)
+      assert %AST.Module{body: [assignment]} = ast
+      assert %AST.Assignment{
+        name: "status",
+        value: %AST.Symbol{name: "ok"}
+      } = assignment
+    end
+
+    test "parses empty tuples" do
+      tokens = [
+        :module, {:identifier, "Test"}, :left_brace,
+        {:identifier, "empty"}, :assign, :left_brace, :right_brace,
+        :right_brace
+      ]
+      
+      assert {:ok, ast, "", %{}, _, _} = Parser.parse(tokens)
+      assert %AST.Module{body: [assignment]} = ast
+      assert %AST.Assignment{
+        name: "empty",
+        value: %AST.Tuple{elements: []}
+      } = assignment
+    end
+
+    test "parses tuples with elements" do
+      tokens = [
+        :module, {:identifier, "Test"}, :left_brace,
+        {:identifier, "result"}, :assign, :left_brace, {:symbol, "ok"}, :comma, {:integer, 42}, :right_brace,
+        :right_brace
+      ]
+      
+      assert {:ok, ast, "", %{}, _, _} = Parser.parse(tokens)
+      assert %AST.Module{body: [assignment]} = ast
+      assert %AST.Assignment{
+        name: "result",
+        value: %AST.Tuple{
+          elements: [
+            %AST.Symbol{name: "ok"},
+            %AST.Literal{value: 42}
+          ]
+        }
+      } = assignment
+    end
+
+    test "parses nested tuples" do
+      tokens = [
+        :module, {:identifier, "Test"}, :left_brace,
+        {:identifier, "nested"}, :assign, :left_brace, {:symbol, "ok"}, :comma, 
+        :left_brace, {:integer, 1}, :comma, {:integer, 2}, :right_brace, :right_brace,
+        :right_brace
+      ]
+      
+      assert {:ok, ast, "", %{}, _, _} = Parser.parse(tokens)
+      assert %AST.Module{body: [assignment]} = ast
+      assert %AST.Assignment{
+        name: "nested",
+        value: %AST.Tuple{
+          elements: [
+            %AST.Symbol{name: "ok"},
+            %AST.Tuple{elements: [%AST.Literal{value: 1}, %AST.Literal{value: 2}]}
+          ]
+        }
+      } = assignment
+    end
   end
 
   describe "library imports" do
@@ -242,6 +327,48 @@ defmodule RataParserTest do
       assert %AST.Module{
         imports: [%AST.LibraryImport{}],
         name: "ExampleModuleTests"
+      } = ast
+    end
+
+    test "end-to-end parsing with symbols and tuples" do
+      source = """
+      module Test {
+        status = :ok
+        result = {:ok, 42}
+        error_case = {:error, "something went wrong"}
+        nested = {:ok, {1, 2, 3}}
+      }
+      """
+      
+      assert {:ok, ast} = RataParser.parse(source)
+      assert %AST.Module{
+        name: "Test",
+        body: [
+          %AST.Assignment{name: "status", value: %AST.Symbol{name: "ok"}},
+          %AST.Assignment{name: "result", value: %AST.Tuple{elements: [%AST.Symbol{name: "ok"}, %AST.Literal{value: 42}]}},
+          %AST.Assignment{name: "error_case", value: %AST.Tuple{elements: [%AST.Symbol{name: "error"}, _]}},
+          %AST.Assignment{name: "nested", value: %AST.Tuple{elements: [%AST.Symbol{name: "ok"}, %AST.Tuple{}]}}
+        ]
+      } = ast
+    end
+
+    test "parses tuples in function calls" do
+      source = """
+      module Test {
+        result = process({:ok, data})
+      }
+      """
+      
+      assert {:ok, ast} = RataParser.parse(source)
+      assert %AST.Module{
+        body: [
+          %AST.Assignment{
+            value: %AST.FunctionCall{
+              function: %AST.Identifier{name: "process"},
+              args: [%AST.Tuple{elements: [%AST.Symbol{name: "ok"}, %AST.Identifier{name: "data"}]}]
+            }
+          }
+        ]
       } = ast
     end
   end

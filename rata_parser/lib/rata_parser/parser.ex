@@ -109,6 +109,8 @@ defmodule RataParser.Parser do
   primary_expression = 
     choice([
       literal(),
+      symbol(),
+      tuple(),
       identifier(),
       function_call(),
       function_definition(),
@@ -122,6 +124,23 @@ defmodule RataParser.Parser do
       unwrap_and_tag(tag(:integer), :value) |> map({__MODULE__, :build_literal, []}),
       unwrap_and_tag(tag(:float), :value) |> map({__MODULE__, :build_literal, []})
     ])
+
+  # Symbols
+  symbol = 
+    unwrap_and_tag(tag(:symbol), :name) |> map({__MODULE__, :build_symbol, []})
+
+  # Tuples
+  tuple = 
+    ignore(tag(:left_brace))
+    |> optional(
+      parsec(:expression)
+      |> repeat(
+        ignore(tag(:comma))
+        |> parsec(:expression)
+      )
+    )
+    |> ignore(tag(:right_brace))
+    |> reduce({__MODULE__, :build_tuple, []})
 
   # Identifiers and qualified identifiers
   qualified_identifier = 
@@ -236,6 +255,14 @@ defmodule RataParser.Parser do
 
   def build_literal([{:value, value}]) do
     %AST.Literal{value: value}
+  end
+
+  def build_symbol([{:name, name}]) do
+    %AST.Symbol{name: name}
+  end
+
+  def build_tuple(elements) do
+    %AST.Tuple{elements: List.flatten(elements)}
   end
 
   def build_identifier([{:name, name}]) do
