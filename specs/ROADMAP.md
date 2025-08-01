@@ -15,8 +15,8 @@ A comprehensive implementation plan for building the Rata programming language f
 - [x] Add range syntax (`1..10`) - COMPLETED
 - [x] Add map/dictionary syntax (`{key: value}`) - COMPLETED
 - [ ] Add string interpolation (`f"Results: {table}"`)
-- [ ] Implement proper type annotations (`posint`, `numeric`)
-- [ ] Add `return` statement support
+- [x] Implement proper type annotations (`posint`, `numeric`) - COMPLETED
+- [x] Add `return` statement support - COMPLETED
 - [ ] Enhance pipe operation parsing (`|>`)
 
 ### 1.2 Core Module Implementation

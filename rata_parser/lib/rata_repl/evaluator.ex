@@ -83,15 +83,19 @@ defmodule RataRepl.Evaluator do
         {:lambda, body, params} ->
           # Lambda function call - bind parameters and evaluate body
           call_lambda(body, params, args, final_context)
+        {:function, params, body} ->
+          # Regular function call - bind parameters and evaluate body with return handling
+          call_function(params, body, args, final_context)
         _ ->
           {:error, "unsupported function type: #{inspect(func)}"}
       end
     end
   end
 
-  # Functions (basic - just return placeholder for now)
-  def eval(%AST.Function{params: _params, body: _body}, context) do
-    {:error, "function definitions not yet implemented"}
+  # Functions - return as closure with params and body
+  def eval(%AST.Function{params: params, body: body}, context) do
+    function_closure = {:function, params, body}
+    {:ok, function_closure, context}
   end
 
   # Lambda expressions - return as closure with body and params
@@ -108,9 +112,12 @@ defmodule RataRepl.Evaluator do
     end
   end
 
-  # Return statements - evaluate the value
+  # Return statements - evaluate the value and mark as return
   def eval(%AST.Return{value: value_ast}, context) do
-    eval(value_ast, context)
+    case eval(value_ast, context) do
+      {:ok, value, new_context} -> {:return, value, new_context}
+      error -> error
+    end
   end
 
   # If expressions (basic - just return placeholder for now)
@@ -261,12 +268,60 @@ defmodule RataRepl.Evaluator do
     end
   end
 
+  # Helper function to call regular functions with return handling
+  defp call_function(params, body, args, context) do
+    # Check parameter count
+    param_count = length(params)
+    arg_count = length(args)
+    
+    if param_count != arg_count do
+      {:error, "function parameter count mismatch: expected #{param_count}, got #{arg_count}"}
+    else
+      # Create function parameter bindings
+      function_context = bind_function_params(params, args, context)
+      
+      # Evaluate the function body with return handling
+      case eval_function_body(body, function_context) do
+        {:return, result, _func_ctx} -> {:ok, result, context}
+        {:ok, result, _func_ctx} -> {:ok, result, context}
+        error -> error
+      end
+    end
+  end
+
   # Helper function to bind lambda parameters to argument values
   defp bind_lambda_params(params, args, context) do
     Enum.zip(params, args)
     |> Enum.reduce(context, fn {param, arg}, acc ->
       Map.put(acc, "__lambda_#{param}", arg)
     end)
+  end
+
+  # Helper function to bind function parameters to argument values
+  defp bind_function_params(params, args, context) do
+    Enum.zip(params, args)
+    |> Enum.reduce(context, fn {%AST.Parameter{name: param_name}, arg}, acc ->
+      Map.put(acc, param_name, arg)
+    end)
+  end
+
+  # Helper function to evaluate function body with early return handling
+  defp eval_function_body([], context), do: {:ok, nil, context}
+  defp eval_function_body([stmt], context) do
+    # Last statement in function body
+    case eval(stmt, context) do
+      {:return, value, new_context} -> {:return, value, new_context}
+      {:ok, value, new_context} -> {:ok, value, new_context}
+      error -> error
+    end
+  end
+  defp eval_function_body([stmt | rest], context) do
+    # Not the last statement - check for early return
+    case eval(stmt, context) do
+      {:return, value, new_context} -> {:return, value, new_context}
+      {:ok, _value, new_context} -> eval_function_body(rest, new_context)
+      error -> error
+    end
   end
 
   # Helper function to evaluate f-string parts

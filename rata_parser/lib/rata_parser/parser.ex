@@ -10,7 +10,7 @@ defmodule RataParser.Parser do
 
   # Forward declarations for recursive rules
   defp expression(combinator \\ empty()), do: pipe_expression(combinator)
-  defp statement(combinator \\ empty()), do: choice(combinator, [assignment(), return_statement()])
+  defp statement(combinator \\ empty()), do: choice(combinator, [return_statement(), assignment()])
   defp library_import(combinator \\ empty()), do: parsec(combinator, :library_import)
 
   # Library import parsing: library ModuleName as alias
@@ -276,11 +276,22 @@ defmodule RataParser.Parser do
     |> map({__MODULE__, :build_if, []})
 
   # Parameter list: name: type, name: type
+  # Type can be an identifier or a built-in type keyword
+  type_annotation = 
+    choice([
+      tag(:posint),
+      tag(:numeric), 
+      tag(:int),
+      tag(:string),
+      tag(:bool),
+      tag(:identifier)
+    ])
+
   parameter_list = 
     unwrap_and_tag(tag(:identifier), :name)
     |> optional(
       ignore(tag(:colon))
-      |> unwrap_and_tag(tag(:identifier), :type)
+      |> unwrap_and_tag(type_annotation, :type)
     )
     |> wrap()
     |> repeat(
@@ -288,7 +299,7 @@ defmodule RataParser.Parser do
       |> unwrap_and_tag(tag(:identifier), :name)
       |> optional(
         ignore(tag(:colon))
-        |> unwrap_and_tag(tag(:identifier), :type)
+        |> unwrap_and_tag(type_annotation, :type)
       )
       |> wrap()
     )
@@ -422,7 +433,11 @@ defmodule RataParser.Parser do
   def build_parameter_list(params) do
     Enum.map(params, fn param ->
       name = Keyword.get(param, :name)
-      type = Keyword.get(param, :type)
+      type = case Keyword.get(param, :type) do
+        nil -> nil
+        atom when is_atom(atom) -> Atom.to_string(atom)
+        string when is_binary(string) -> string
+      end
       %AST.Parameter{name: name, type: type}
     end)
   end

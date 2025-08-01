@@ -31,7 +31,12 @@ defmodule RataParser.Lexer do
       string("return") |> replace(:return),
       string("if") |> replace(:if),
       string("else") |> replace(:else),
-      string("as") |> replace(:as)
+      string("as") |> replace(:as),
+      string("posint") |> replace(:posint),
+      string("numeric") |> replace(:numeric),
+      string("int") |> replace(:int),
+      string("string") |> replace(:string),
+      string("bool") |> replace(:bool)
     ])
 
   # Operators
