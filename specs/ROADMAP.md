@@ -6,7 +6,7 @@ A comprehensive implementation plan for building the Rata programming language f
 **Goal: Expand parser to handle all sample syntax and build core runtime**
 
 ### 1.1 Parser Enhancement
-- [ ] Add support for `library` imports and module aliasing (`library ExampleModule as em`)
+- [x] Add support for `library` imports and module aliasing (`library ExampleModule as em`) - COMPLETED
 - [ ] Implement pattern matching syntax (`case` expressions with `{:ok, value}` matching)
 - [ ] Add tuple/symbol syntax (`{:ok, value}`, `{:error, message}`)
 - [ ] Support lambda syntax (`~ .x + .y`)
@@ -17,7 +17,7 @@ A comprehensive implementation plan for building the Rata programming language f
 
 ### 1.2 Core Module Implementation
 - [ ] **Core**: Basic language primitives, control flow, assert statements
-- [ ] **Module**: Module definition, import/export system, `__module__` references
+- [x] **Module**: Module definition, import/export system (import side completed), `__module__` references
 - [ ] **Math**: Basic arithmetic operators (+, -, *, ^) and mathematical functions
 - [ ] Create minimal runtime that can execute example-module.rata
 - [ ] Create test runner that can execute example-tests.rata

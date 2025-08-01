@@ -1,0 +1,124 @@
+defmodule RataParser.Lexer do
+  @moduledoc """
+  Lexer for the Rata programming language using NimbleParsec.
+  
+  Tokenizes Rata source code into a stream of tokens for parsing.
+  """
+
+  import NimbleParsec
+
+  # Whitespace and comments
+  whitespace = 
+    choice([
+      ascii_char([?\s, ?\t]),
+      string("\r\n"),
+      ascii_char([?\r, ?\n])
+    ])
+    |> times(min: 1)
+    |> ignore()
+
+  comment = 
+    string("#")
+    |> repeat(ascii_char([{:not, ?\n}]))
+    |> ignore()
+
+  # Keywords
+  keywords = 
+    choice([
+      string("library") |> replace(:library),
+      string("module") |> replace(:module),
+      string("function") |> replace(:function),
+      string("return") |> replace(:return),
+      string("if") |> replace(:if),
+      string("else") |> replace(:else),
+      string("as") |> replace(:as)
+    ])
+
+  # Operators
+  pipe_op = string("\\>") |> replace(:pipe)
+  
+  operators = 
+    choice([
+      pipe_op,
+      string("<=") |> replace(:less_equal),
+      string("=") |> replace(:assign),
+      string("+") |> replace(:plus),
+      string("-") |> replace(:minus),
+      string("*") |> replace(:multiply),
+      string("^") |> replace(:power),
+      string(">") |> replace(:greater)
+    ])
+
+  # Delimeters
+  delimiters = 
+    choice([
+      string("{") |> replace(:left_brace),
+      string("}") |> replace(:right_brace),
+      string("(") |> replace(:left_paren),
+      string(")") |> replace(:right_paren),
+      string(":") |> replace(:colon),
+      string(",") |> replace(:comma),
+      string(".") |> replace(:dot)
+    ])
+
+  # Numbers
+  integer = 
+    optional(string("-"))
+    |> ascii_string([?0..?9], min: 1)
+    |> reduce({__MODULE__, :to_integer, []})
+    |> unwrap_and_tag(:integer)
+
+  float = 
+    optional(string("-"))
+    |> ascii_string([?0..?9], min: 1)
+    |> string(".")
+    |> ascii_string([?0..?9], min: 1)
+    |> reduce({__MODULE__, :to_float, []})
+    |> unwrap_and_tag(:float)
+
+  # Special identifiers
+  module_ref = string("__module__") |> replace({:module_ref, "__module__"})
+
+  # Regular identifiers
+  identifier = 
+    ascii_char([?a..?z, ?A..?Z, ?_])
+    |> repeat(ascii_char([?a..?z, ?A..?Z, ?0..?9, ?_]))
+    |> reduce({Enum, :join, [""]})
+    |> unwrap_and_tag(:identifier)
+
+  # Token definitions in order of precedence
+  token = 
+    choice([
+      float,
+      integer,
+      keywords,
+      module_ref,
+      identifier,
+      operators,
+      delimiters
+    ])
+
+  # Main tokenizer with whitespace/comment handling
+  defparsec :tokenize, 
+    repeat(
+      choice([
+        whitespace,
+        comment,
+        token
+      ])
+    )
+    |> eos()
+
+  # Helper functions for token conversion
+  def to_integer(parts) do
+    parts
+    |> Enum.join("")
+    |> String.to_integer()
+  end
+
+  def to_float(parts) do
+    parts
+    |> Enum.join("")
+    |> String.to_float()
+  end
+end
