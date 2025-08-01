@@ -42,6 +42,12 @@ defmodule RataParser.AST do
     @type t :: %__MODULE__{value: number() | String.t()}
   end
 
+  defmodule InterpolatedString do
+    @moduledoc "Represents f-strings with embedded expressions: f\"Hello {name}\""
+    defstruct [:parts]
+    @type t :: %__MODULE__{parts: [String.t() | Expression.t()]}
+  end
+
   defmodule Symbol do
     @moduledoc "Represents symbol literals: :ok, :error, :info"
     defstruct [:name]
@@ -123,6 +129,7 @@ defmodule RataParser.AST do
   @type Statement :: LibraryImport.t() | Assignment.t() | FunctionDef.t() | Return.t()
   @type Expression ::
           Literal.t()
+          | InterpolatedString.t()
           | Symbol.t()
           | Tuple.t()
           | Identifier.t()

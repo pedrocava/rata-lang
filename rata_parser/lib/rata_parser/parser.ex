@@ -123,6 +123,8 @@ defmodule RataParser.Parser do
   # Literals
   literal = 
     choice([
+      unwrap_and_tag(tag(:f_string), :content) |> map({__MODULE__, :build_interpolated_string, []}),
+      unwrap_and_tag(tag(:string), :value) |> map({__MODULE__, :build_literal, []}),
       unwrap_and_tag(tag(:integer), :value) |> map({__MODULE__, :build_literal, []}),
       unwrap_and_tag(tag(:float), :value) |> map({__MODULE__, :build_literal, []})
     ])
@@ -335,6 +337,69 @@ defmodule RataParser.Parser do
     %AST.BinaryOp{left: left, operator: op, right: right}
   end
   def build_right_binary_op([expr], _op_type), do: expr
+
+  def build_interpolated_string([{:content, f_string_content}]) do
+    parts = parse_f_string_content(f_string_content)
+    %AST.InterpolatedString{parts: parts}
+  end
+
+  # Helper function to parse f-string content and extract parts
+  defp parse_f_string_content(content) do
+    # Remove the f" and " from the content
+    inner_content = String.slice(content, 2..-2)
+    
+    # Split into parts - this is a simplified implementation
+    # In a full implementation, we'd need a proper parser for nested expressions
+    parse_f_string_parts(inner_content, [], "")
+  end
+
+  defp parse_f_string_parts("", parts, current_string) do
+    if current_string != "" do
+      parts ++ [current_string]
+    else
+      parts
+    end
+  end
+
+  defp parse_f_string_parts("{" <> rest, parts, current_string) do
+    # Find matching closing brace
+    case find_closing_brace(rest, 0) do
+      {expr_content, remaining} ->
+        # Parse the expression content (simplified - just create an identifier for now)
+        expr_ast = %AST.Identifier{name: String.trim(expr_content)}
+        new_parts = if current_string != "", do: parts ++ [current_string, expr_ast], else: parts ++ [expr_ast]
+        parse_f_string_parts(remaining, new_parts, "")
+      :no_match ->
+        # Treat as literal brace
+        parse_f_string_parts(rest, parts, current_string <> "{")
+    end
+  end
+
+  defp parse_f_string_parts(<<char::utf8, rest::binary>>, parts, current_string) do
+    parse_f_string_parts(rest, parts, current_string <> <<char::utf8>>)
+  end
+
+  defp find_closing_brace(content, depth) do
+    find_closing_brace(content, depth, "")
+  end
+
+  defp find_closing_brace("", _depth, _acc), do: :no_match
+  
+  defp find_closing_brace("{" <> rest, depth, acc) do
+    find_closing_brace(rest, depth + 1, acc <> "{")
+  end
+  
+  defp find_closing_brace("}" <> rest, 0, acc) do
+    {acc, rest}
+  end
+  
+  defp find_closing_brace("}" <> rest, depth, acc) do
+    find_closing_brace(rest, depth - 1, acc <> "}")
+  end
+  
+  defp find_closing_brace(<<char::utf8, rest::binary>>, depth, acc) do
+    find_closing_brace(rest, depth, acc <> <<char::utf8>>)
+  end
 
   # Helper function to extract lambda parameters from an expression
   defp extract_lambda_params(%AST.LambdaParam{name: name}), do: [name]

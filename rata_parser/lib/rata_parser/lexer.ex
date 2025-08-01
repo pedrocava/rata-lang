@@ -78,6 +78,39 @@ defmodule RataParser.Lexer do
     |> reduce({__MODULE__, :to_float, []})
     |> unwrap_and_tag(:float)
 
+  # Strings
+  string_literal = 
+    ignore(string("\""))
+    |> repeat(
+      choice([
+        string("\\\"") |> replace(?"),
+        string("\\\\") |> replace(?\\),
+        string("\\n") |> replace(?\n),
+        string("\\t") |> replace(?\t),
+        string("\\r") |> replace(?\r),
+        ascii_char([{:not, ?"}, {:not, ?\\}])
+      ])
+    )
+    |> ignore(string("\""))
+    |> reduce({__MODULE__, :to_string, []})
+    |> unwrap_and_tag(:string)
+
+  # F-strings (interpolated strings) - capture content for later parsing
+  f_string = 
+    string("f\"")
+    |> repeat(
+      choice([
+        string("\\\""),
+        string("\\\\"),
+        string("\\{"),
+        string("\\}"),
+        ascii_char([{:not, ?"}])
+      ])
+    )
+    |> string("\"")
+    |> reduce({__MODULE__, :to_f_string, []})
+    |> unwrap_and_tag(:f_string)
+
   # Special identifiers
   module_ref = string("__module__") |> replace({:module_ref, "__module__"})
 
@@ -107,6 +140,8 @@ defmodule RataParser.Lexer do
   # Token definitions in order of precedence
   token = 
     choice([
+      f_string,
+      string_literal,
       float,
       integer,
       keywords,
@@ -149,6 +184,16 @@ defmodule RataParser.Lexer do
 
   def to_lambda_param([_dot | rest]) do
     rest
+    |> Enum.join("")
+  end
+
+  def to_string(chars) do
+    chars
+    |> List.to_string()
+  end
+
+  def to_f_string(parts) do
+    parts
     |> Enum.join("")
   end
 end

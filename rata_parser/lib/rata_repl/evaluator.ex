@@ -21,6 +21,16 @@ defmodule RataRepl.Evaluator do
     {:ok, value, context}
   end
 
+  # Interpolated strings - evaluate embedded expressions and concatenate
+  def eval(%AST.InterpolatedString{parts: parts}, context) do
+    case eval_f_string_parts(parts, context, []) do
+      {:ok, evaluated_parts, final_context} ->
+        result = Enum.join(evaluated_parts, "")
+        {:ok, result, final_context}
+      error -> error
+    end
+  end
+
   # Identifiers - look up in context
   def eval(%AST.Identifier{name: name}, context) do
     case Map.get(context, name) do
@@ -118,6 +128,10 @@ defmodule RataRepl.Evaluator do
     {:ok, left + right}
   end
 
+  defp apply_binary_op(:plus, left, right) when is_binary(left) and is_binary(right) do
+    {:ok, left <> right}
+  end
+
   defp apply_binary_op(:minus, left, right) when is_number(left) and is_number(right) do
     {:ok, left - right}
   end
@@ -196,4 +210,30 @@ defmodule RataRepl.Evaluator do
       Map.put(acc, "__lambda_#{param}", arg)
     end)
   end
+
+  # Helper function to evaluate f-string parts
+  defp eval_f_string_parts([], context, acc) do
+    {:ok, Enum.reverse(acc), context}
+  end
+
+  defp eval_f_string_parts([part | rest], context, acc) when is_binary(part) do
+    # String literal part - use as-is
+    eval_f_string_parts(rest, context, [part | acc])
+  end
+
+  defp eval_f_string_parts([part | rest], context, acc) do
+    # Expression part - evaluate it
+    case eval(part, context) do
+      {:ok, value, new_context} ->
+        string_value = to_string(value)
+        eval_f_string_parts(rest, new_context, [string_value | acc])
+      error -> error
+    end
+  end
+
+  # Helper function to convert values to strings for f-string interpolation
+  defp to_string(value) when is_binary(value), do: value
+  defp to_string(value) when is_number(value), do: Kernel.to_string(value)
+  defp to_string(value) when is_boolean(value), do: Kernel.to_string(value)
+  defp to_string(value), do: inspect(value)
 end
