@@ -9,7 +9,7 @@ A comprehensive implementation plan for building the Rata programming language f
 - [x] Add support for `library` imports and module aliasing (`library ExampleModule as em`) - COMPLETED
 - [ ] Implement pattern matching syntax (`case` expressions with `{:ok, value}` matching)
 - [x] Add tuple/symbol syntax (`{:ok, value}`, `{:error, message}`) - COMPLETED
-- [ ] Support lambda syntax (`~ .x + .y`)
+- [x] Support lambda syntax (`~ .x + .y`) - COMPLETED
 - [ ] Add string interpolation (`f"Results: {table}"`)
 - [ ] Implement proper type annotations (`posint`, `numeric`)
 - [ ] Add `return` statement support
