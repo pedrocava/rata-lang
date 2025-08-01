@@ -11,16 +11,14 @@ You reason about Rata like you do about tidyverse R, with a bit of python syntax
 - Recursive modules: `library datetime as dt; library datetime.timezone as tz`
 - Wrapped returns. The standard lib wraps most functions in a `foo!` variant with Tuple return value. Containing a Symbol and a corresponding value.
 - Elixir-like pattern matching: 
-`
+```
 case File.read_csv!("data.csv") {
-  {:ok, body} -> Log.info(f"Results: {body}")
+  {:ok, table} -> Log.info(f"Results: {table}")
   {:error, message} -> Log.error(f"Error: {message}")
 }
 
-# vs
-
-File.read_csv("data.csv") # returns Table, raises exception if no such file exists.
-`
+Dataloader.read_csv("data.csv") # returns Table, raises exception if no such file exists.
+```
 - Everything you need to get rata applications to prod: json, http, develping APIs, database connectors, cloud SDKs
 - 1-indexed.
 - No scalars. Every "scalar" value is simply a single entry vector.
