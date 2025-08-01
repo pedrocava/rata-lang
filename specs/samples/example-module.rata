@@ -1,0 +1,32 @@
+module ExampleModule {
+
+  # functions return their final expression's value by default
+  add1 = function n: int { n + 1 }
+  pi = 3.1415926535
+  
+  fibonacci = function n: posint {
+    
+    if n <= 2 {
+    
+      return 1
+    
+    } else {
+
+      return fibonacci(n-1) + fibonacci(n-2)  
+  
+    }
+
+  }
+
+  powerfac = function k: int {
+  
+    return function x: numeric { x^k }
+
+  }
+
+  square = __module__.powerfac(2)
+  four = __module__.powerfac(2)(2) # currying allowed
+  sixty_four = 8
+    \> __module__.square()
+
+}
