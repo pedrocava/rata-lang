@@ -111,6 +111,8 @@ defmodule RataParser.Parser do
       literal(),
       symbol(),
       tuple(),
+      lambda_expression(),
+      lambda_parameter(),
       identifier(),
       function_call(),
       function_definition(),
@@ -141,6 +143,18 @@ defmodule RataParser.Parser do
     )
     |> ignore(tag(:right_brace))
     |> reduce({__MODULE__, :build_tuple, []})
+
+  # Lambda expressions: ~ .x + .y
+  lambda_expression = 
+    ignore(tag(:lambda))
+    |> parsec(:expression)
+    |> wrap()
+    |> map({__MODULE__, :build_lambda, []})
+
+  # Lambda parameters: .x, .y, etc.
+  lambda_parameter = 
+    unwrap_and_tag(tag(:lambda_param), :name)
+    |> map({__MODULE__, :build_lambda_param, []})
 
   # Identifiers and qualified identifiers
   qualified_identifier = 
@@ -265,6 +279,16 @@ defmodule RataParser.Parser do
     %AST.Tuple{elements: List.flatten(elements)}
   end
 
+  def build_lambda([body]) do
+    # Extract lambda parameters from the body expression during parsing
+    params = extract_lambda_params(body)
+    %AST.Lambda{body: body, params: params}
+  end
+
+  def build_lambda_param([{:name, name}]) do
+    %AST.LambdaParam{name: name}
+  end
+
   def build_identifier([{:name, name}]) do
     %AST.Identifier{name: name}
   end
@@ -311,4 +335,20 @@ defmodule RataParser.Parser do
     %AST.BinaryOp{left: left, operator: op, right: right}
   end
   def build_right_binary_op([expr], _op_type), do: expr
+
+  # Helper function to extract lambda parameters from an expression
+  defp extract_lambda_params(%AST.LambdaParam{name: name}), do: [name]
+  defp extract_lambda_params(%AST.BinaryOp{left: left, right: right}) do
+    extract_lambda_params(left) ++ extract_lambda_params(right)
+  end
+  defp extract_lambda_params(%AST.FunctionCall{function: func, args: args}) do
+    extract_lambda_params(func) ++ Enum.flat_map(args, &extract_lambda_params/1)
+  end
+  defp extract_lambda_params(%AST.If{condition: cond, then_branch: then_b, else_branch: else_b}) do
+    cond_params = extract_lambda_params(cond)
+    then_params = Enum.flat_map(then_b, &extract_lambda_params/1)
+    else_params = if else_b, do: Enum.flat_map(else_b, &extract_lambda_params/1), else: []
+    cond_params ++ then_params ++ else_params
+  end
+  defp extract_lambda_params(_), do: []
 end

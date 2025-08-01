@@ -28,6 +28,20 @@ defmodule RataParserTest do
                Lexer.tokenize("= + - * ^ <= > \\>")
     end
 
+    test "tokenizes lambda operator" do
+      assert {:ok, [:lambda], "", %{}, {1, 0}, 1} = 
+               Lexer.tokenize("~")
+    end
+
+    test "tokenizes lambda parameters" do
+      assert {:ok, [lambda_param: "x"], "", %{}, {1, 0}, 2} = 
+               Lexer.tokenize(".x")
+      assert {:ok, [lambda_param: "y"], "", %{}, {1, 0}, 2} = 
+               Lexer.tokenize(".y")
+      assert {:ok, [lambda_param: "foo"], "", %{}, {1, 0}, 4} = 
+               Lexer.tokenize(".foo")
+    end
+
     test "tokenizes module reference" do
       assert {:ok, [module_ref: "__module__"], "", %{}, {1, 0}, 10} = 
                Lexer.tokenize("__module__")
@@ -368,6 +382,85 @@ defmodule RataParserTest do
               args: [%AST.Tuple{elements: [%AST.Symbol{name: "ok"}, %AST.Identifier{name: "data"}]}]
             }
           }
+        ]
+      } = ast
+    end
+  end
+
+  describe "lambda expressions" do
+    test "parses simple lambda with one parameter" do
+      tokens = [
+        :module, {:identifier, "Test"}, :left_brace,
+        {:identifier, "lambda_func"}, :assign, :lambda, {:lambda_param, "x"}, :plus, {:integer, 1},
+        :right_brace
+      ]
+      
+      assert {:ok, ast, "", %{}, _, _} = Parser.parse(tokens)
+      assert %AST.Module{body: [assignment]} = ast
+      assert %AST.Assignment{
+        name: "lambda_func",
+        value: %AST.Lambda{
+          body: %AST.BinaryOp{
+            left: %AST.LambdaParam{name: "x"},
+            operator: :plus,
+            right: %AST.Literal{value: 1}
+          },
+          params: ["x"]
+        }
+      } = assignment
+    end
+
+    test "parses lambda with two parameters" do
+      tokens = [
+        :module, {:identifier, "Test"}, :left_brace,
+        {:identifier, "add_func"}, :assign, :lambda, {:lambda_param, "x"}, :plus, {:lambda_param, "y"},
+        :right_brace
+      ]
+      
+      assert {:ok, ast, "", %{}, _, _} = Parser.parse(tokens)
+      assert %AST.Module{body: [assignment]} = ast
+      assert %AST.Assignment{
+        name: "add_func",
+        value: %AST.Lambda{
+          body: %AST.BinaryOp{
+            left: %AST.LambdaParam{name: "x"},
+            operator: :plus,
+            right: %AST.LambdaParam{name: "y"}
+          },
+          params: ["x", "y"]
+        }
+      } = assignment
+    end
+
+    test "parses lambda parameters" do
+      tokens = [
+        :module, {:identifier, "Test"}, :left_brace,
+        {:identifier, "param"}, :assign, {:lambda_param, "x"},
+        :right_brace
+      ]
+      
+      assert {:ok, ast, "", %{}, _, _} = Parser.parse(tokens)
+      assert %AST.Module{body: [assignment]} = ast
+      assert %AST.Assignment{
+        name: "param",
+        value: %AST.LambdaParam{name: "x"}
+      } = assignment
+    end
+
+    test "end-to-end lambda parsing" do
+      source = """
+      module Test {
+        square = ~ .x * .x
+        add = ~ .x + .y
+      }
+      """
+      
+      assert {:ok, ast} = RataParser.parse(source)
+      assert %AST.Module{
+        name: "Test",
+        body: [
+          %AST.Assignment{name: "square", value: %AST.Lambda{params: ["x"]}},
+          %AST.Assignment{name: "add", value: %AST.Lambda{params: ["x", "y"]}}
         ]
       } = ast
     end

@@ -94,6 +94,18 @@ defmodule RataParser.AST do
     @type t :: %__MODULE__{params: [Parameter.t()], body: [Statement.t()]}
   end
 
+  defmodule Lambda do
+    @moduledoc "Represents lambda expressions: ~ .x + .y"
+    defstruct [:body, :params]
+    @type t :: %__MODULE__{body: Expression.t(), params: [String.t()]}
+  end
+
+  defmodule LambdaParam do
+    @moduledoc "Represents lambda parameters: .x, .y, etc."
+    defstruct [:name]
+    @type t :: %__MODULE__{name: String.t()}
+  end
+
   defmodule Pipe do
     @moduledoc "Represents pipe operations: left \\> right"
     defstruct [:left, :right]
@@ -119,5 +131,7 @@ defmodule RataParser.AST do
           | BinaryOp.t()
           | If.t()
           | Function.t()
+          | Lambda.t()
+          | LambdaParam.t()
           | Pipe.t()
 end

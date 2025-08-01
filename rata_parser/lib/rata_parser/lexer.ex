@@ -36,10 +36,12 @@ defmodule RataParser.Lexer do
 
   # Operators
   pipe_op = string("\\>") |> replace(:pipe)
+  lambda_op = string("~") |> replace(:lambda)
   
   operators = 
     choice([
       pipe_op,
+      lambda_op,
       string("<=") |> replace(:less_equal),
       string("=") |> replace(:assign),
       string("+") |> replace(:plus),
@@ -87,6 +89,14 @@ defmodule RataParser.Lexer do
     |> reduce({__MODULE__, :to_symbol, []})
     |> unwrap_and_tag(:symbol)
 
+  # Lambda parameters (.x, .y, etc.)
+  lambda_param = 
+    string(".")
+    |> ascii_char([?a..?z, ?A..?Z])
+    |> repeat(ascii_char([?a..?z, ?A..?Z, ?0..?9, ?_]))
+    |> reduce({__MODULE__, :to_lambda_param, []})
+    |> unwrap_and_tag(:lambda_param)
+
   # Regular identifiers
   identifier = 
     ascii_char([?a..?z, ?A..?Z, ?_])
@@ -101,6 +111,7 @@ defmodule RataParser.Lexer do
       integer,
       keywords,
       symbol,
+      lambda_param,
       module_ref,
       identifier,
       operators,
@@ -132,6 +143,11 @@ defmodule RataParser.Lexer do
   end
 
   def to_symbol([_colon | rest]) do
+    rest
+    |> Enum.join("")
+  end
+
+  def to_lambda_param([_dot | rest]) do
     rest
     |> Enum.join("")
   end

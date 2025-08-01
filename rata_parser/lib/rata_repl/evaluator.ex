@@ -70,6 +70,9 @@ defmodule RataRepl.Evaluator do
             {:error, reason} -> {:error, reason}
             result -> {:ok, result, final_context}  # Handle direct returns
           end
+        {:lambda, body, params} ->
+          # Lambda function call - bind parameters and evaluate body
+          call_lambda(body, params, args, final_context)
         _ ->
           {:error, "unsupported function type: #{inspect(func)}"}
       end
@@ -79,6 +82,20 @@ defmodule RataRepl.Evaluator do
   # Functions (basic - just return placeholder for now)
   def eval(%AST.Function{params: _params, body: _body}, context) do
     {:error, "function definitions not yet implemented"}
+  end
+
+  # Lambda expressions - return as closure with body and params
+  def eval(%AST.Lambda{body: body, params: params}, context) do
+    lambda_func = {:lambda, body, params}
+    {:ok, lambda_func, context}
+  end
+
+  # Lambda parameters - look up in lambda evaluation context
+  def eval(%AST.LambdaParam{name: name}, context) do
+    case Map.get(context, "__lambda_#{name}") do
+      nil -> {:error, "undefined lambda parameter: .#{name}"}
+      value -> {:ok, value, context}
+    end
   end
 
   # Return statements - evaluate the value
@@ -153,5 +170,30 @@ defmodule RataRepl.Evaluator do
         end
       error -> error
     end
+  end
+
+  # Helper function to call lambda functions
+  defp call_lambda(body, params, args, context) do
+    # Check parameter count
+    if length(params) != length(args) do
+      {:error, "lambda parameter count mismatch: expected #{length(params)}, got #{length(args)}"}
+    else
+      # Create lambda parameter bindings
+      lambda_context = bind_lambda_params(params, args, context)
+      
+      # Evaluate the lambda body with bound parameters
+      case eval(body, lambda_context) do
+        {:ok, result, _lambda_ctx} -> {:ok, result, context}
+        error -> error
+      end
+    end
+  end
+
+  # Helper function to bind lambda parameters to argument values
+  defp bind_lambda_params(params, args, context) do
+    Enum.zip(params, args)
+    |> Enum.reduce(context, fn {param, arg}, acc ->
+      Map.put(acc, "__lambda_#{param}", arg)
+    end)
   end
 end
