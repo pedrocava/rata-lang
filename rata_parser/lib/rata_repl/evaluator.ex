@@ -7,6 +7,7 @@ defmodule RataRepl.Evaluator do
   """
 
   alias RataParser.AST
+  alias RataModules.Math
 
   @doc """
   Evaluate an AST node in the given context.
@@ -25,6 +26,14 @@ defmodule RataRepl.Evaluator do
     case Map.get(context, name) do
       nil -> {:error, "undefined variable: #{name}"}
       value -> {:ok, value, context}
+    end
+  end
+
+  # Qualified identifiers - handle module.function references
+  def eval(%AST.QualifiedIdentifier{module: module_name, name: function_name}, context) do
+    case resolve_module_function(module_name, function_name) do
+      {:ok, function} -> {:ok, function, context}
+      error -> error
     end
   end
 
@@ -49,9 +58,22 @@ defmodule RataRepl.Evaluator do
     end
   end
 
-  # Function calls (basic - just return placeholder for now)
-  def eval(%AST.FunctionCall{function: _func_ast, args: _args}, context) do
-    {:error, "function calls not yet implemented"}
+  # Function calls - handle both regular and module function calls
+  def eval(%AST.FunctionCall{function: func_ast, args: args_ast}, context) do
+    with {:ok, func, context1} <- eval(func_ast, context),
+         {:ok, args, final_context} <- eval_args(args_ast, context1) do
+      case func do
+        {module, function_name} when is_atom(module) and is_atom(function_name) ->
+          # Module function call
+          case apply(module, function_name, args) do
+            {:ok, result} -> {:ok, result, final_context}
+            {:error, reason} -> {:error, reason}
+            result -> {:ok, result, final_context}  # Handle direct returns
+          end
+        _ ->
+          {:error, "unsupported function type: #{inspect(func)}"}
+      end
+    end
   end
 
   # Functions (basic - just return placeholder for now)
@@ -101,5 +123,35 @@ defmodule RataRepl.Evaluator do
 
   defp apply_binary_op(op, left, right) do
     {:error, "unsupported operation: #{op} between #{inspect(left)} and #{inspect(right)}"}
+  end
+
+  # Helper function to resolve module functions
+  defp resolve_module_function("Math", function_name) do
+    function_atom = String.to_atom(function_name)
+    if function_exported?(Math, function_atom, 0) do
+      {:ok, {Math, function_atom}}
+    elsif function_exported?(Math, function_atom, 1) do
+      {:ok, {Math, function_atom}}
+    elsif function_exported?(Math, function_atom, 2) do
+      {:ok, {Math, function_atom}}
+    else
+      {:error, "undefined function: Math.#{function_name}"}
+    end
+  end
+  defp resolve_module_function(module_name, function_name) do
+    {:error, "undefined module: #{module_name}"}
+  end
+
+  # Helper function to evaluate function arguments
+  defp eval_args([], context), do: {:ok, [], context}
+  defp eval_args([arg | rest], context) do
+    case eval(arg, context) do
+      {:ok, value, new_context} ->
+        case eval_args(rest, new_context) do
+          {:ok, values, final_context} -> {:ok, [value | values], final_context}
+          error -> error
+        end
+      error -> error
+    end
   end
 end
