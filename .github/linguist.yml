@@ -1,0 +1,8 @@
+Rata:
+  type: programming
+  color: "#8B5CF6"
+  extensions:
+  - ".rata"
+  tm_scope: source.rata
+  ace_mode: text
+  language_id: 999999999
