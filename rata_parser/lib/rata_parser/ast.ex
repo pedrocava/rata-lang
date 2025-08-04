@@ -35,6 +35,12 @@ defmodule RataParser.AST do
     @type t :: %__MODULE__{value: Expression.t()}
   end
 
+  defmodule AssertStatement do
+    @moduledoc "Represents assert statement: assert condition"
+    defstruct [:condition]
+    @type t :: %__MODULE__{condition: Expression.t()}
+  end
+
   # Expression types
   defmodule Literal do
     @moduledoc "Represents literal values: numbers, strings"
@@ -150,7 +156,7 @@ defmodule RataParser.AST do
   end
 
   # Type unions for convenience
-  @type Statement :: LibraryImport.t() | Assignment.t() | FunctionDef.t() | Return.t()
+  @type Statement :: LibraryImport.t() | Assignment.t() | FunctionDef.t() | Return.t() | AssertStatement.t()
   @type Expression ::
           Literal.t()
           | InterpolatedString.t()

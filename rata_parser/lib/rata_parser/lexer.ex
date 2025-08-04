@@ -32,6 +32,7 @@ defmodule RataParser.Lexer do
       string("if") |> replace(:if),
       string("else") |> replace(:else),
       string("as") |> replace(:as),
+      string("assert") |> replace(:assert),
       string("posint") |> replace(:posint),
       string("numeric") |> replace(:numeric),
       string("int") |> replace(:int),
@@ -40,7 +41,7 @@ defmodule RataParser.Lexer do
     ])
 
   # Operators
-  pipe_op = string("\\>") |> replace(:pipe)
+  pipe_op = string("|>") |> replace(:pipe)
   lambda_op = string("~") |> replace(:lambda)
   range_op = string("..") |> replace(:range)
   
@@ -49,7 +50,10 @@ defmodule RataParser.Lexer do
       pipe_op,
       lambda_op,
       range_op,
+      string("==") |> replace(:equal),
+      string("!=") |> replace(:not_equal),
       string("<=") |> replace(:less_equal),
+      string("%%") |> replace(:modulo),
       string("=") |> replace(:assign),
       string("+") |> replace(:plus),
       string("-") |> replace(:minus),

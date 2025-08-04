@@ -10,7 +10,7 @@ defmodule RataParser.Parser do
 
   # Forward declarations for recursive rules
   defp expression(combinator \\ empty()), do: pipe_expression(combinator)
-  defp statement(combinator \\ empty()), do: choice(combinator, [return_statement(), assignment()])
+  defp statement(combinator \\ empty()), do: choice(combinator, [assert_statement(), return_statement(), assignment()])
   defp library_import(combinator \\ empty()), do: parsec(combinator, :library_import)
 
   # Library import parsing: library ModuleName as alias
@@ -58,6 +58,12 @@ defmodule RataParser.Parser do
     |> wrap()
     |> map({__MODULE__, :build_return, []})
 
+  assert_statement = 
+    ignore(tag(:assert))
+    |> tag(parsec(:expression), :condition)
+    |> wrap()
+    |> map({__MODULE__, :build_assert, []})
+
   # Expression parsing with operator precedence
   
   # Pipe expressions (lowest precedence)
@@ -73,7 +79,7 @@ defmodule RataParser.Parser do
   comparison_expression = 
     parsec(:additive_expression)
     |> repeat(
-      choice([tag(:less_equal), tag(:greater)])
+      choice([tag(:equal), tag(:not_equal), tag(:less_equal), tag(:greater)])
       |> parsec(:additive_expression)
     )
     |> reduce({__MODULE__, :build_binary_ops, [:comparison]})
@@ -100,7 +106,7 @@ defmodule RataParser.Parser do
   multiplicative_expression = 
     parsec(:power_expression)
     |> repeat(
-      tag(:multiply)
+      choice([tag(:multiply), tag(:modulo)])
       |> parsec(:power_expression)
     )
     |> reduce({__MODULE__, :build_binary_ops, [:multiplicative]})
@@ -341,6 +347,10 @@ defmodule RataParser.Parser do
 
   def build_return([{:value, value}]) do
     %AST.Return{value: value}
+  end
+
+  def build_assert([{:condition, condition}]) do
+    %AST.AssertStatement{condition: condition}
   end
 
   def build_literal([{:value, value}]) do

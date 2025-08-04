@@ -8,6 +8,7 @@ defmodule RataRepl.Evaluator do
 
   alias RataParser.AST
   alias RataModules.Math
+  alias RataModules.Core
 
   @doc """
   Evaluate an AST node in the given context.
@@ -120,9 +121,20 @@ defmodule RataRepl.Evaluator do
     end
   end
 
-  # If expressions (basic - just return placeholder for now)
-  def eval(%AST.If{condition: _cond, then_branch: _then, else_branch: _else}, context) do
-    {:error, "if expressions not yet implemented"}
+  # If expressions - evaluate condition and execute appropriate branch
+  def eval(%AST.If{condition: cond, then_branch: then_branch, else_branch: else_branch}, context) do
+    case eval(cond, context) do
+      {:ok, condition_value, context1} ->
+        if is_truthy(condition_value) do
+          eval_function_body(then_branch, context1)
+        else
+          case else_branch do
+            nil -> {:ok, nil, context1}
+            else_stmts -> eval_function_body(else_stmts, context1)
+          end
+        end
+      error -> error
+    end
   end
 
   # Sets - create MapSet from evaluated elements
@@ -183,6 +195,19 @@ defmodule RataRepl.Evaluator do
     {:ok, String.to_atom(name), context}
   end
 
+  # Assert statements - evaluate condition and fail if false
+  def eval(%AST.AssertStatement{condition: condition}, context) do
+    case eval(condition, context) do
+      {:ok, result, new_context} ->
+        if is_truthy(result) do
+          {:ok, result, new_context}
+        else
+          {:error, "assertion failed: #{inspect(condition)}"}
+        end
+      error -> error
+    end
+  end
+
   # Fallback for unhandled AST nodes
   def eval(ast, _context) do
     {:error, "evaluation not implemented for #{inspect(ast.__struct__)}"}
@@ -217,6 +242,22 @@ defmodule RataRepl.Evaluator do
     {:ok, left <= right}
   end
 
+  defp apply_binary_op(:equal, left, right) do
+    {:ok, left == right}
+  end
+
+  defp apply_binary_op(:not_equal, left, right) do
+    {:ok, left != right}
+  end
+
+  defp apply_binary_op(:modulo, left, right) when is_integer(left) and is_integer(right) and right != 0 do
+    {:ok, rem(left, right)}
+  end
+
+  defp apply_binary_op(:modulo, _left, 0) do
+    {:error, "division by zero in modulo operation"}
+  end
+
   defp apply_binary_op(op, left, right) do
     {:error, "unsupported operation: #{op} between #{inspect(left)} and #{inspect(right)}"}
   end
@@ -232,6 +273,18 @@ defmodule RataRepl.Evaluator do
       {:ok, {Math, function_atom}}
     else
       {:error, "undefined function: Math.#{function_name}"}
+    end
+  end
+  defp resolve_module_function("Core", function_name) do
+    function_atom = String.to_atom(function_name)
+    if function_exported?(Core, function_atom, 0) do
+      {:ok, {Core, function_atom}}
+    elsif function_exported?(Core, function_atom, 1) do
+      {:ok, {Core, function_atom}}
+    elsif function_exported?(Core, function_atom, 2) do
+      {:ok, {Core, function_atom}}
+    else
+      {:error, "undefined function: Core.#{function_name}"}
     end
   end
   defp resolve_module_function(module_name, function_name) do
@@ -373,4 +426,12 @@ defmodule RataRepl.Evaluator do
   defp to_string(value) when is_number(value), do: Kernel.to_string(value)
   defp to_string(value) when is_boolean(value), do: Kernel.to_string(value)
   defp to_string(value), do: inspect(value)
+
+  # Helper function to determine truthiness (Rata follows common language conventions)
+  defp is_truthy(nil), do: false
+  defp is_truthy(false), do: false
+  defp is_truthy(0), do: false
+  defp is_truthy(0.0), do: false
+  defp is_truthy(""), do: false
+  defp is_truthy(_), do: true
 end
