@@ -14,23 +14,6 @@ This is being vibe coded and takes a lot of inspiration from [T](https://github.
 
 ## Code Examples
 
-### RNA to DNA Transcription
-
-```rata
-# Convert RNA sequence to DNA
-rna_to_dna = function(rna: string) {
-  rna 
-    |> String.replace("U", "T")
-    |> String.replace("u", "t")
-}
-
-rna_sequence = "AUCGAUCGAU"
-dna_sequence = rna_to_dna(rna_sequence)
-Log.info(f"RNA: {rna_sequence} -> DNA: {dna_sequence}")
-```
-
-### Bird Count Analysis
-
 ```rata
 module BirdCount {
   # Get today's bird count (first element)
@@ -70,15 +53,6 @@ module BirdCount {
       |> List.length()
   }
 }
-
-# Track daily bird visits: [today, yesterday, day_before, ...]
-daily_counts = [2, 5, 0, 7, 4, 1]
-updated_counts = BirdCount.increment_day_count(daily_counts)
-
-Log.info(f"Today's count: {BirdCount.today(daily_counts)}")
-Log.info(f"After increment: {BirdCount.today(updated_counts)}")
-Log.info(f"Total birds: {BirdCount.total(daily_counts)}")
-Log.info(f"Busy days: {BirdCount.busy_days(daily_counts)}")
 ```
 
 ### Fibonacci Sequence
@@ -94,7 +68,8 @@ module Math {
   }
   
   # Generate first 10 fibonacci numbers
-  fib_sequence = 1..10 |> Enum.map(fibonacci)
+  fib_sequence = 1..10 |>
+    Enum.map(fibonacci)
 }
 ```
 
