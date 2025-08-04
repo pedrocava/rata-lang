@@ -106,34 +106,6 @@ module Math {
 }
 ```
 
-## Quick Start
-
-```bash
-# Clone the repository
-git clone https://github.com/your-username/rata-lang.git
-cd rata-lang/rata_parser
-
-# Install dependencies (requires Elixir)
-mix deps.get
-
-# Start the REPL
-elixir repl.exs
-```
-
-### REPL Commands
-- `:help` - Show help message
-- `:quit` - Exit REPL  
-- `:clear` - Clear all variables
-- `:vars` - Show defined variables
-
-## Language Features
-
-- **R-like lambdas**: `~ .x + .y` for concise anonymous functions
-- **Pattern matching**: Elixir-style `case` expressions with wrapped returns
-- **Pipe operations**: `|>` for readable data transformation chains
-- **Recursive modules**: `library datetime.timezone as tz`
-- **Rich data types**: Vectors, Lists, Maps, Tables, Sets, Tuples
-
 ## Project Status
 
 Rata is still highly experimental and my side-project. Wanna talk about it? Hit me up on [~twitter~ X](https://x.com/pedroocava).
