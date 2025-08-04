@@ -4,8 +4,6 @@
   <img src="assets/rata-logo.png" alt="Rata Logo" width="200"/>
 </div>
 
-## The idea
-
 Rata combines what I like about three programming languages I had professional contact with and came to appreciate. 
 
 * Modern, [`tidyverse`])() R just feels *nice* to code with.
