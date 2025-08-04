@@ -6,7 +6,7 @@
 
 Rata combines what I like about three programming languages I had professional contact with and came to appreciate. 
 
-* Modern, [`tidyverse`])(https://www.tidyverse.org/) R just feels *nice* to code with.
+* Modern, [`tidyverse`](https://www.tidyverse.org/) R just feels *nice* to code with.
 * Python is the go-to data engineering language for a reason, and mimicking it is in many ways inevitable for any language that is being designed with production data environments. I also enjoy some aspects of its syntax.
 * Elixir is a language designed with such good taste. It's just elegant, and it constrain users in a paradoxically freeing way. There is a real joy in Elixir, and the [BEAM virtual machine](https://whyelixirlang.com/#elixir-is-special) it runs on is a natural fit to data engineering workloads because it allows one to easily write fault-tolerant, parallel code.
 
