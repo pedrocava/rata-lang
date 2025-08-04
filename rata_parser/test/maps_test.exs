@@ -5,20 +5,38 @@ defmodule MapsTest do
   alias RataModules.Maps
 
   describe "Maps.get/2" do
-    test "returns value for existing key" do
+    test "returns value for existing atom key" do
       map = %{key: "value", number: 42}
       assert Maps.get(map, :key) == {:ok, "value"}
       assert Maps.get(map, :number) == {:ok, 42}
     end
 
+    test "returns value for existing string key" do
+      map = %{"key" => "value", "number" => 42}
+      assert Maps.get(map, "key") == {:ok, "value"}
+      assert Maps.get(map, "number") == {:ok, 42}
+    end
+
+    test "unified key access - atom and string keys are equivalent" do
+      # Store with atom, access with string
+      atom_map = %{key: "atom_stored"}
+      assert Maps.get(atom_map, "key") == {:ok, "atom_stored"}
+      
+      # Store with string, access with atom
+      string_map = %{"key" => "string_stored"}
+      assert Maps.get(string_map, :key) == {:ok, "string_stored"}
+    end
+
     test "returns nil for non-existing key" do
       map = %{key: "value"}
       assert Maps.get(map, :missing) == {:ok, nil}
+      assert Maps.get(map, "missing") == {:ok, nil}
     end
 
     test "works with empty map" do
       map = %{}
       assert Maps.get(map, :any) == {:ok, nil}
+      assert Maps.get(map, "any") == {:ok, nil}
     end
 
     test "returns error for non-map input" do
@@ -26,10 +44,10 @@ defmodule MapsTest do
       assert Maps.get(123, :key) == {:error, "Maps.get requires a map as first argument, got 123"}
     end
 
-    test "returns error for non-atom key" do
+    test "returns error for invalid key type" do
       map = %{key: "value"}
-      assert Maps.get(map, "string_key") == {:error, "Maps.get requires an atom key as second argument, got \"string_key\""}
-      assert Maps.get(map, 123) == {:error, "Maps.get requires an atom key as second argument, got 123"}
+      assert Maps.get(map, 123) == {:error, "Maps.get requires an atom or string key as second argument, got 123"}
+      assert Maps.get(map, []) == {:error, "Maps.get requires an atom or string key as second argument, got []"}
     end
   end
 
@@ -44,79 +62,137 @@ defmodule MapsTest do
       assert Maps.put(map, :key, "new_value") == {:ok, %{key: "new_value"}}
     end
 
+    test "unified key storage - normalizes to atoms and removes variants" do
+      # Start with atom key, update with string key
+      map = %{key: "atom_value"}
+      {:ok, result} = Maps.put(map, "key", "string_update")
+      assert result == %{key: "string_update"}
+      
+      # Start with string key, update with atom key
+      map = %{"key" => "string_value"}
+      {:ok, result} = Maps.put(map, :key, "atom_update")
+      assert result == %{key: "atom_update"}
+      
+      # Should not have both string and atom versions
+      refute Map.has_key?(result, "key")
+    end
+
     test "works with empty map" do
       map = %{}
       assert Maps.put(map, :key, "value") == {:ok, %{key: "value"}}
+      assert Maps.put(map, "key", "value") == {:ok, %{key: "value"}}
     end
 
     test "handles various value types" do
       map = %{}
       assert Maps.put(map, :string, "text") == {:ok, %{string: "text"}}
-      assert Maps.put(map, :number, 42) == {:ok, %{number: 42}}
+      assert Maps.put(map, "number", 42) == {:ok, %{number: 42}}
       assert Maps.put(map, :boolean, true) == {:ok, %{boolean: true}}
-      assert Maps.put(map, :list, [1, 2, 3]) == {:ok, %{list: [1, 2, 3]}}
+      assert Maps.put(map, "list", [1, 2, 3]) == {:ok, %{list: [1, 2, 3]}}
     end
 
     test "returns error for non-map input" do
       assert Maps.put("not a map", :key, "value") == {:error, "Maps.put requires a map as first argument, got \"not a map\""}
     end
 
-    test "returns error for non-atom key" do
+    test "returns error for invalid key type" do
       map = %{}
-      assert Maps.put(map, "string_key", "value") == {:error, "Maps.put requires an atom key as second argument, got \"string_key\""}
+      assert Maps.put(map, 123, "value") == {:error, "Maps.put requires an atom or string key as second argument, got 123"}
     end
   end
 
   describe "Maps.delete/2" do
-    test "removes existing key from map" do
+    test "removes existing atom key from map" do
       map = %{keep: "this", remove: "this"}
       assert Maps.delete(map, :remove) == {:ok, %{keep: "this"}}
+    end
+
+    test "removes existing string key from map" do
+      map = %{"keep" => "this", "remove" => "this"}
+      assert Maps.delete(map, "remove") == {:ok, %{"keep" => "this"}}
+    end
+
+    test "unified key deletion - removes both string and atom variants" do
+      # Delete atom key from string-keyed map
+      string_map = %{"key" => "value", "other" => "keep"}
+      assert Maps.delete(string_map, :key) == {:ok, %{"other" => "keep"}}
+      
+      # Delete string key from atom-keyed map
+      atom_map = %{key: "value", other: "keep"}
+      assert Maps.delete(atom_map, "key") == {:ok, %{other: "keep"}}
+      
+      # Map with both atom and string versions (edge case)
+      mixed_map = %{key: "atom_value", "key" => "string_value", other: "keep"}
+      {:ok, result} = Maps.delete(mixed_map, :key)
+      assert result == %{other: "keep"}
+      refute Map.has_key?(result, :key)
+      refute Map.has_key?(result, "key")
     end
 
     test "returns original map when key doesn't exist" do
       map = %{key: "value"}
       assert Maps.delete(map, :missing) == {:ok, %{key: "value"}}
+      assert Maps.delete(map, "missing") == {:ok, %{key: "value"}}
     end
 
     test "works with empty map" do
       map = %{}
       assert Maps.delete(map, :any) == {:ok, %{}}
+      assert Maps.delete(map, "any") == {:ok, %{}}
     end
 
     test "returns error for non-map input" do
       assert Maps.delete("not a map", :key) == {:error, "Maps.delete requires a map as first argument, got \"not a map\""}
     end
 
-    test "returns error for non-atom key" do
+    test "returns error for invalid key type" do
       map = %{key: "value"}
-      assert Maps.delete(map, "string_key") == {:error, "Maps.delete requires an atom key as second argument, got \"string_key\""}
+      assert Maps.delete(map, 123) == {:error, "Maps.delete requires an atom or string key as second argument, got 123"}
     end
   end
 
   describe "Maps.has_key/2" do
-    test "returns true for existing key" do
+    test "returns true for existing atom key" do
       map = %{existing: "value", another: 42}
       assert Maps.has_key(map, :existing) == {:ok, true}
       assert Maps.has_key(map, :another) == {:ok, true}
     end
 
+    test "returns true for existing string key" do
+      map = %{"existing" => "value", "another" => 42}
+      assert Maps.has_key(map, "existing") == {:ok, true}
+      assert Maps.has_key(map, "another") == {:ok, true}
+    end
+
+    test "unified key detection - atom and string keys are equivalent" do
+      # Store with atom, check with string
+      atom_map = %{key: "value"}
+      assert Maps.has_key(atom_map, "key") == {:ok, true}
+      
+      # Store with string, check with atom
+      string_map = %{"key" => "value"}
+      assert Maps.has_key(string_map, :key) == {:ok, true}
+    end
+
     test "returns false for non-existing key" do
       map = %{key: "value"}
       assert Maps.has_key(map, :missing) == {:ok, false}
+      assert Maps.has_key(map, "missing") == {:ok, false}
     end
 
     test "returns false for empty map" do
       map = %{}
       assert Maps.has_key(map, :any) == {:ok, false}
+      assert Maps.has_key(map, "any") == {:ok, false}
     end
 
     test "returns error for non-map input" do
       assert Maps.has_key("not a map", :key) == {:error, "Maps.has_key requires a map as first argument, got \"not a map\""}
     end
 
-    test "returns error for non-atom key" do
+    test "returns error for invalid key type" do
       map = %{key: "value"}
-      assert Maps.has_key(map, "string_key") == {:error, "Maps.has_key requires an atom key as second argument, got \"string_key\""}
+      assert Maps.has_key(map, 123) == {:error, "Maps.has_key requires an atom or string key as second argument, got 123"}
     end
   end
 
@@ -289,18 +365,25 @@ defmodule MapsTest do
       assert Maps.from_list(%{key: "value"}) == {:error, "Maps.from_list requires a list as argument, got %{key: \"value\"}"}
     end
 
+    test "accepts both atom and string keys in tuples" do
+      # Mixed atom and string keys
+      list = [{:atom_key, "atom_value"}, {"string_key", "string_value"}]
+      expected = %{atom_key: "atom_value", string_key: "string_value"}
+      assert Maps.from_list(list) == {:ok, expected}
+    end
+
     test "returns error for invalid tuple format" do
       # Non-tuple elements
       list = [{:valid, "tuple"}, "invalid element"]
-      assert Maps.from_list(list) == {:error, "Maps.from_list requires a list of tuples with atom keys, got invalid format in [{:valid, \"tuple\"}, \"invalid element\"]"}
+      assert Maps.from_list(list) == {:error, "Maps.from_list requires a list of tuples with atom or string keys, got invalid format in [{:valid, \"tuple\"}, \"invalid element\"]"}
       
-      # Tuple with non-atom key
-      list = [{"string_key", "value"}]
-      assert Maps.from_list(list) == {:error, "Maps.from_list requires a list of tuples with atom keys, got invalid format in [{\"string_key\", \"value\"}]"}
+      # Tuple with invalid key type
+      list = [{123, "value"}]
+      assert Maps.from_list(list) == {:error, "Maps.from_list requires a list of tuples with atom or string keys, got invalid format in [{123, \"value\"}]"}
       
       # Tuples with wrong arity
       list = [{:key}]
-      assert Maps.from_list(list) == {:error, "Maps.from_list requires a list of tuples with atom keys, got invalid format in [key: {}]"}
+      assert Maps.from_list(list) == {:error, "Maps.from_list requires a list of tuples with atom or string keys, got invalid format in [key: {}]"}
     end
   end
 end

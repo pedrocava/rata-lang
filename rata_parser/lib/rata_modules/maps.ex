@@ -9,7 +9,8 @@ defmodule RataModules.Maps do
   - Immutable by default
   - Data-first philosophy
   
-  Maps in Rata are represented as Elixir maps with atom keys.
+  Maps in Rata support both string and atom keys interchangeably.
+  The API treats "key" and :key as equivalent - you can store with one and retrieve with the other.
   Functions include: get, put, delete, has_key, keys, values, merge, size, empty, to_list, from_list.
   """
 
@@ -21,12 +22,18 @@ defmodule RataModules.Maps do
       iex> Maps.get({key: "value"}, :key)
       {:ok, "value"}
       
+      iex> Maps.get({key: "value"}, "key")  # Same key, different format
+      {:ok, "value"}
+      
+      iex> Maps.get({"key" => "value"}, :key)  # Works both ways
+      {:ok, "value"}
+      
       iex> Maps.get({key: "value"}, :missing)
       {:ok, nil}
   """
-  def get(map, key) when is_map(map) and is_atom(key) do
+  def get(map, key) when is_map(map) and (is_atom(key) or is_binary(key)) do
     try do
-      result = Map.get(map, key)
+      result = get_with_unified_key(map, key)
       {:ok, result}
     rescue
       e -> {:error, "Maps.get failed: #{Exception.message(e)}"}
@@ -35,24 +42,28 @@ defmodule RataModules.Maps do
   def get(map, _key) when not is_map(map) do
     {:error, "Maps.get requires a map as first argument, got #{inspect(map)}"}
   end
-  def get(_map, key) when not is_atom(key) do
-    {:error, "Maps.get requires an atom key as second argument, got #{inspect(key)}"}
+  def get(_map, key) do
+    {:error, "Maps.get requires an atom or string key as second argument, got #{inspect(key)}"}
   end
 
   @doc """
   Puts a key-value pair into a map.
   Returns a new map with the key-value pair added or updated.
+  Keys are normalized to atoms and any existing string/atom variants are replaced.
   
   ## Examples
       iex> Maps.put({}, :key, "value")
       {:ok, %{key: "value"}}
       
-      iex> Maps.put({existing: "old"}, :existing, "new")
+      iex> Maps.put({existing: "old"}, "existing", "new")  # Updates existing :existing
       {:ok, %{existing: "new"}}
   """
-  def put(map, key, value) when is_map(map) and is_atom(key) do
+  def put(map, key, value) when is_map(map) and (is_atom(key) or is_binary(key)) do
     try do
-      result = Map.put(map, key, value)
+      # Normalize key to atom and remove any existing string version
+      normalized_key = normalize_key(key)
+      cleaned_map = remove_key_variants(map, key)
+      result = Map.put(cleaned_map, normalized_key, value)
       {:ok, result}
     rescue
       e -> {:error, "Maps.put failed: #{Exception.message(e)}"}
@@ -61,8 +72,8 @@ defmodule RataModules.Maps do
   def put(map, _key, _value) when not is_map(map) do
     {:error, "Maps.put requires a map as first argument, got #{inspect(map)}"}
   end
-  def put(_map, key, _value) when not is_atom(key) do
-    {:error, "Maps.put requires an atom key as second argument, got #{inspect(key)}"}
+  def put(_map, key, _value) do
+    {:error, "Maps.put requires an atom or string key as second argument, got #{inspect(key)}"}
   end
 
   @doc """
@@ -76,9 +87,10 @@ defmodule RataModules.Maps do
       iex> Maps.delete({key: "value"}, :missing)
       {:ok, %{key: "value"}}
   """
-  def delete(map, key) when is_map(map) and is_atom(key) do
+  def delete(map, key) when is_map(map) and (is_atom(key) or is_binary(key)) do
     try do
-      result = Map.delete(map, key)
+      # Remove both string and atom versions of the key
+      result = remove_key_variants(map, key)
       {:ok, result}
     rescue
       e -> {:error, "Maps.delete failed: #{Exception.message(e)}"}
@@ -87,8 +99,8 @@ defmodule RataModules.Maps do
   def delete(map, _key) when not is_map(map) do
     {:error, "Maps.delete requires a map as first argument, got #{inspect(map)}"}
   end
-  def delete(_map, key) when not is_atom(key) do
-    {:error, "Maps.delete requires an atom key as second argument, got #{inspect(key)}"}
+  def delete(_map, key) do
+    {:error, "Maps.delete requires an atom or string key as second argument, got #{inspect(key)}"}
   end
 
   @doc """
@@ -102,9 +114,9 @@ defmodule RataModules.Maps do
       iex> Maps.has_key({key: "value"}, :missing)
       {:ok, false}
   """
-  def has_key(map, key) when is_map(map) and is_atom(key) do
+  def has_key(map, key) when is_map(map) and (is_atom(key) or is_binary(key)) do
     try do
-      result = Map.has_key?(map, key)
+      result = has_unified_key(map, key)
       {:ok, result}
     rescue
       e -> {:error, "Maps.has_key failed: #{Exception.message(e)}"}
@@ -113,8 +125,8 @@ defmodule RataModules.Maps do
   def has_key(map, _key) when not is_map(map) do
     {:error, "Maps.has_key requires a map as first argument, got #{inspect(map)}"}
   end
-  def has_key(_map, key) when not is_atom(key) do
-    {:error, "Maps.has_key requires an atom key as second argument, got #{inspect(key)}"}
+  def has_key(_map, key) do
+    {:error, "Maps.has_key requires an atom or string key as second argument, got #{inspect(key)}"}
   end
 
   @doc """
@@ -271,9 +283,9 @@ defmodule RataModules.Maps do
   """
   def from_list(list) when is_list(list) do
     try do
-      # Validate that all elements are 2-tuples with atom keys
+      # Validate that all elements are 2-tuples with atom or string keys
       valid_tuples = Enum.all?(list, fn
-        {key, _value} when is_atom(key) -> true
+        {key, _value} when is_atom(key) or is_binary(key) -> true
         _ -> false
       end)
       
@@ -281,7 +293,7 @@ defmodule RataModules.Maps do
         result = Map.new(list)
         {:ok, result}
       else
-        {:error, "Maps.from_list requires a list of tuples with atom keys, got invalid format in #{inspect(list)}"}
+        {:error, "Maps.from_list requires a list of tuples with atom or string keys, got invalid format in #{inspect(list)}"}
       end
     rescue
       e -> {:error, "Maps.from_list failed: #{Exception.message(e)}"}
@@ -289,5 +301,45 @@ defmodule RataModules.Maps do
   end
   def from_list(list) do
     {:error, "Maps.from_list requires a list as argument, got #{inspect(list)}"}
+  end
+
+  # Private helper functions for unified key handling
+
+  # Normalize a key to its canonical atom form
+  defp normalize_key(key) when is_binary(key) do
+    String.to_atom(key)
+  end
+  defp normalize_key(key) when is_atom(key) do
+    key
+  end
+
+  # Get value trying both string and atom versions of the key
+  defp get_with_unified_key(map, key) do
+    atom_key = normalize_key(key)
+    string_key = Atom.to_string(atom_key)
+    
+    cond do
+      Map.has_key?(map, atom_key) -> Map.get(map, atom_key)
+      Map.has_key?(map, string_key) -> Map.get(map, string_key)
+      true -> nil
+    end
+  end
+
+  # Check if map has key in either string or atom form
+  defp has_unified_key(map, key) do
+    atom_key = normalize_key(key)
+    string_key = Atom.to_string(atom_key)
+    
+    Map.has_key?(map, atom_key) || Map.has_key?(map, string_key)
+  end
+
+  # Remove both string and atom versions of a key from the map
+  defp remove_key_variants(map, key) do
+    atom_key = normalize_key(key)
+    string_key = Atom.to_string(atom_key)
+    
+    map
+    |> Map.delete(atom_key)
+    |> Map.delete(string_key)
   end
 end
