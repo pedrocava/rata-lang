@@ -6,13 +6,18 @@
   *A data engineering language combining R's tidyverse ergonomics with Python-like syntax, running on Elixir's BEAM*
 </div>
 
-## What is Rata?
+## The idea
 
-Rata is a new programming language designed specifically for data engineering tasks. It combines the familiar data manipulation patterns of R's tidyverse with Python-like syntax, while leveraging the fault-tolerant Elixir BEAM virtual machine and OTP's process model.
+Rata combines what I like about three programming languages I had professional contact with and came to appreciate. 
+
+* Modern, [`tidyverse`])() R just feels *nice* to code with.
+* Python is the go-to data engineering language for a reason, and mimicking it is in many ways inevitable for any language that is being designed with production data environments. I also enjoy some aspects of its syntax.
+* Elixir is a language designed with such good taste. It's just elegant, and it constrain users in a paradoxically freeing way. There is a real joy in Elixir, and the [BEAM virtual machine](https://whyelixirlang.com/#elixir-is-special) it runs on is a natural fit to data engineering workloads because it allows one to easily write fault-tolerant, parallel code.
+
+This is being vibe coded and takes a lot of inspiration from [T](https://github.com/b-rodrigues/tlang).
 
 ## Design Principles
 
-- **🔢 Data-first**: Built from the ground up for data engineering workflows
 - **💬 REPL-first**: Interactive development experience that encourages exploration  
 - **🔒 Immutable by default**: Standard library avoids side-effects by design
 - **📊 1-indexed**: Following R conventions for intuitive data work
