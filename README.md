@@ -116,6 +116,3 @@ Rata is still highly experimental and my side-project. Wanna talk about it? Hit 
 - [Implementation Roadmap](specs/ROADMAP.md) 
 - [Standard Library Modules](specs/module-list.md)
 - [Sample Code](specs/samples/)
-
-
-*Built with ❤️ for the data engineering community*
