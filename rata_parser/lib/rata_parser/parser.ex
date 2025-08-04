@@ -152,6 +152,7 @@ defmodule RataParser.Parser do
       brace_expression(),
       lambda_expression(),
       lambda_parameter(),
+      underscore(),
       identifier(),
       function_call(),
       function_definition(),
@@ -249,6 +250,11 @@ defmodule RataParser.Parser do
     unwrap_and_tag(tag(:lambda_param), :name)
     |> map({__MODULE__, :build_lambda_param, []})
 
+  # Underscore wildcard: _
+  underscore = 
+    tag(:underscore)
+    |> map({__MODULE__, :build_underscore, []})
+
   # Identifiers and qualified identifiers
   qualified_identifier = 
     unwrap_and_tag(tag(:identifier), :module)
@@ -311,10 +317,22 @@ defmodule RataParser.Parser do
     |> tag(repeat(parsec(:statement)), :body)
     |> ignore(tag(:right_brace))
     |> optional(
-      ignore(tag(:catch))
-      |> ignore(tag(:left_brace))
-      |> tag(repeat(parsec(:catch_clause)), :catch_clauses)
-      |> ignore(tag(:right_brace))
+      choice([
+        # catch as variable { clauses }
+        ignore(tag(:catch))
+        |> ignore(tag(:as))
+        |> unwrap_and_tag(tag(:identifier), :exception_var)
+        |> ignore(tag(:left_brace))
+        |> tag(repeat(parsec(:catch_clause)), :catch_clauses)
+        |> ignore(tag(:right_brace))
+        |> wrap(),
+        # catch { clauses }
+        ignore(tag(:catch))
+        |> ignore(tag(:left_brace))
+        |> tag(repeat(parsec(:catch_clause)), :catch_clauses)
+        |> ignore(tag(:right_brace))
+        |> wrap()
+      ])
     )
     |> optional(
       ignore(tag(:else))
@@ -438,7 +456,8 @@ defmodule RataParser.Parser do
     catch_clauses = Keyword.get(args, :catch_clauses, [])
     else_clause = Keyword.get(args, :else_clause)
     after_clause = Keyword.get(args, :after_clause)
-    %AST.TryExpression{body: body, catch_clauses: catch_clauses, else_clause: else_clause, after_clause: after_clause}
+    exception_var = Keyword.get(args, :exception_var)
+    %AST.TryExpression{body: body, catch_clauses: catch_clauses, else_clause: else_clause, after_clause: after_clause, exception_var: exception_var}
   end
 
   def build_catch_clause([{:pattern, pattern}, {:body, body}]) do
@@ -506,6 +525,10 @@ defmodule RataParser.Parser do
 
   def build_lambda_param([{:name, name}]) do
     %AST.LambdaParam{name: name}
+  end
+
+  def build_underscore([_]) do
+    %AST.Underscore{}
   end
 
   def build_identifier([{:name, name}]) do

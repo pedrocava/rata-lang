@@ -195,6 +195,11 @@ defmodule RataRepl.Evaluator do
     {:ok, String.to_atom(name), context}
   end
 
+  # Underscore wildcard - represents itself
+  def eval(%AST.Underscore{}, context) do
+    {:ok, :_, context}
+  end
+
   # Assert statements - evaluate condition and fail if false
   def eval(%AST.AssertStatement{condition: condition}, context) do
     case eval(condition, context) do
@@ -209,7 +214,7 @@ defmodule RataRepl.Evaluator do
   end
 
   # Try expressions - implement try/catch/after semantics
-  def eval(%AST.TryExpression{body: body, catch_clauses: catch_clauses, else_clause: else_clause, after_clause: after_clause}, context) do
+  def eval(%AST.TryExpression{body: body, catch_clauses: catch_clauses, else_clause: else_clause, after_clause: after_clause, exception_var: exception_var}, context) do
     try do
       case eval_statements(body, context) do
         {:ok, result, new_context} ->
@@ -228,7 +233,7 @@ defmodule RataRepl.Evaluator do
           end
         {:error, exception} ->
           # Try to match against catch clauses
-          case match_catch_clauses(exception, catch_clauses, context) do
+          case match_catch_clauses(exception, catch_clauses, exception_var, context) do
             {:ok, catch_result, catch_context} ->
               execute_after_clause(after_clause, catch_context, catch_result)
             {:error, _} = unhandled_error ->
@@ -537,23 +542,28 @@ defmodule RataRepl.Evaluator do
   end
 
   # Helper function to match exception against catch clauses
-  defp match_catch_clauses(_exception, [], _context) do
+  defp match_catch_clauses(_exception, [], _exception_var, _context) do
     {:error, "unhandled exception"}
   end
-  defp match_catch_clauses(exception, [catch_clause | rest], context) do
-    case match_catch_clause(exception, catch_clause, context) do
+  defp match_catch_clauses(exception, [catch_clause | rest], exception_var, context) do
+    case match_catch_clause(exception, catch_clause, exception_var, context) do
       {:match, result, new_context} -> {:ok, result, new_context}
-      :no_match -> match_catch_clauses(exception, rest, context)
+      :no_match -> match_catch_clauses(exception, rest, exception_var, context)
       {:error, _} = error -> error
     end
   end
 
   # Helper function to match a single catch clause
-  defp match_catch_clause(exception, %AST.CatchClause{pattern: pattern, guard: guard, body: body}, context) do
+  defp match_catch_clause(exception, %AST.CatchClause{pattern: pattern, guard: guard, body: body}, exception_var, context) do
     case pattern_match(exception, pattern, context) do
       {:match, bindings, pattern_context} ->
+        # Add exception variable binding if present
+        final_bindings = case exception_var do
+          nil -> bindings
+          var_name -> Map.put(bindings, var_name, exception)
+        end
         # Check guard if present
-        guard_context = Map.merge(pattern_context, bindings)
+        guard_context = Map.merge(pattern_context, final_bindings)
         case check_guard(guard, guard_context) do
           true ->
             # Execute catch body with pattern bindings
@@ -585,12 +595,19 @@ defmodule RataRepl.Evaluator do
   end
   defp pattern_match(exception, %AST.Symbol{name: symbol_name}, context) do
     # Match specific exception types
+    atom_name = String.to_atom(symbol_name)
     case exception do
-      %{exception: ^symbol_name} ->
+      %{exception: ^atom_name} ->
+        {:match, %{}, context}
+      ^atom_name ->
         {:match, %{}, context}
       _ ->
         :no_match
     end
+  end
+  defp pattern_match(_exception, %AST.Underscore{}, context) do
+    # Underscore matches everything
+    {:match, %{}, context}
   end
   defp pattern_match(_exception, _pattern, _context) do
     # Fallback - no match

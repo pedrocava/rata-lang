@@ -43,12 +43,13 @@ defmodule RataParser.AST do
 
   defmodule TryExpression do
     @moduledoc "Represents try expression: try { body } catch { clauses } after { cleanup }"
-    defstruct [:body, :catch_clauses, :else_clause, :after_clause]
+    defstruct [:body, :catch_clauses, :else_clause, :after_clause, :exception_var]
     @type t :: %__MODULE__{
             body: [Statement.t()],
             catch_clauses: [CatchClause.t()],
             else_clause: [Statement.t()] | nil,
-            after_clause: [Statement.t()] | nil
+            after_clause: [Statement.t()] | nil,
+            exception_var: String.t() | nil
           }
   end
 
@@ -175,6 +176,12 @@ defmodule RataParser.AST do
     @type t :: %__MODULE__{name: String.t()}
   end
 
+  defmodule Underscore do
+    @moduledoc "Represents underscore wildcard pattern: _"
+    defstruct []
+    @type t :: %__MODULE__{}
+  end
+
   defmodule Pipe do
     @moduledoc "Represents pipe operations: left \\> right"
     defstruct [:left, :right]
@@ -209,4 +216,5 @@ defmodule RataParser.AST do
           | LambdaParam.t()
           | Pipe.t()
           | TryExpression.t()
+          | Underscore.t()
 end

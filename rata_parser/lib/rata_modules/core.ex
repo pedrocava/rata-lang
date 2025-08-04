@@ -109,6 +109,13 @@ defmodule RataModules.Core do
   end
 
   @doc """
+  Create a ValueError exception.
+  """
+  def value_error(message) do
+    {:ok, %{exception: :value_error, message: message, stacktrace: nil}}
+  end
+
+  @doc """
   Get the exception type from an exception.
   """
   def exception_type(%{exception: type}), do: {:ok, type}

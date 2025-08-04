@@ -153,6 +153,9 @@ defmodule RataParser.Lexer do
     |> reduce({__MODULE__, :to_lambda_param, []})
     |> unwrap_and_tag(:lambda_param)
 
+  # Underscore wildcard (must come before identifier)
+  underscore = string("_") |> replace(:underscore)
+
   # Regular identifiers
   identifier = 
     ascii_char([?a..?z, ?A..?Z, ?_])
@@ -171,6 +174,7 @@ defmodule RataParser.Lexer do
       symbol,
       lambda_param,
       module_ref,
+      underscore,
       identifier,
       operators,
       delimiters

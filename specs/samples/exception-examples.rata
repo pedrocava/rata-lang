@@ -10,7 +10,7 @@ module "ExceptionExamples" {
   
   } catch as error {
     :runtime_error -> Log.info(f"Caught runtime error: {error}")
-    :value_error -> Log.info(f"Value error: {error}"
+    :value_error -> Log.info(f"Value error: {error}")
   }
 
   result2 = try {
@@ -18,7 +18,7 @@ module "ExceptionExamples" {
   } catch {
     :division_by_zero -> "Cannot divide by zero"
   } after {
-    Log.debug("The {after} clause only runs after an error!"
+    Log.debug("The {after} clause only runs after an error!")
   }
 
   result3 = try {
@@ -27,7 +27,7 @@ module "ExceptionExamples" {
   } catch {
     _ -> "Error occurred"
   } else {
-    Log.debug("No exception occurred, and ")
+    Log.debug("No exception occurred")
   }
 
   result4 = try {
