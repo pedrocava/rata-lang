@@ -40,18 +40,53 @@ Log.info(f"RNA: {rna_sequence} -> DNA: {dna_sequence}")
 ### Bird Count Analysis
 
 ```rata
-# Analyze bird observation data
-bird_counts = {
-  :sparrow => [12, 8, 15, 20],
-  :robin => [5, 3, 8, 12], 
-  :cardinal => [2, 1, 4, 6]
+module BirdCount {
+  # Get today's bird count (first element)
+  today = function(counts: [int]) {
+    if List.is_empty(counts) {
+      nil
+    } else {
+      List.first(counts)
+    }
+  }
+  
+  # Increment today's count by 1
+  increment_day_count = function(counts: [int]) {
+    if List.is_empty(counts) {
+      [1]
+    } else {
+      today_count = List.first(counts)
+      rest_counts = List.rest(counts)
+      List.prepend(rest_counts, today_count + 1)
+    }
+  }
+  
+  # Check if any day had zero birds
+  has_day_without_birds = function(counts: [int]) {
+    Enum.any(counts, ~ .x == 0)
+  }
+  
+  # Calculate total birds across all days
+  total = function(counts: [int]) {
+    Enum.sum(counts)
+  }
+  
+  # Count busy days (5+ birds)
+  busy_days = function(counts: [int]) {
+    counts 
+      |> Enum.keep(~ .x >= 5)
+      |> List.length()
+  }
 }
 
-total_counts = Maps.map(bird_counts, ~ Enum.sum(.y))
-most_observed = Maps.max_by(total_counts, ~ .y)
+# Track daily bird visits: [today, yesterday, day_before, ...]
+daily_counts = [2, 5, 0, 7, 4, 1]
+updated_counts = BirdCount.increment_day_count(daily_counts)
 
-Log.info(f"Total observations: {total_counts}")
-Log.info(f"Most observed bird: {most_observed}")
+Log.info(f"Today's count: {BirdCount.today(daily_counts)}")
+Log.info(f"After increment: {BirdCount.today(updated_counts)}")
+Log.info(f"Total birds: {BirdCount.total(daily_counts)}")
+Log.info(f"Busy days: {BirdCount.busy_days(daily_counts)}")
 ```
 
 ### Fibonacci Sequence

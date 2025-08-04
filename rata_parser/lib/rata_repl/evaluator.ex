@@ -12,6 +12,7 @@ defmodule RataRepl.Evaluator do
   alias RataModules.Log
   alias RataModules.Stats
   alias RataModules.Maps
+  alias RataModules.List
 
   @doc """
   Evaluate an AST node in the given context.
@@ -408,6 +409,20 @@ defmodule RataRepl.Evaluator do
       {:ok, {Maps, function_atom}}
     else
       {:error, "undefined function: Maps.#{function_name}"}
+    end
+  end
+  defp resolve_module_function("List", function_name) do
+    function_atom = String.to_atom(function_name)
+    if function_exported?(List, function_atom, 0) do
+      {:ok, {List, function_atom}}
+    elsif function_exported?(List, function_atom, 1) do
+      {:ok, {List, function_atom}}
+    elsif function_exported?(List, function_atom, 2) do
+      {:ok, {List, function_atom}}
+    elsif function_exported?(List, function_atom, 3) do
+      {:ok, {List, function_atom}}
+    else
+      {:error, "undefined function: List.#{function_name}"}
     end
   end
   defp resolve_module_function(module_name, function_name) do
