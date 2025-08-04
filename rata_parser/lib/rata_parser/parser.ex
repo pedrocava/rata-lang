@@ -10,7 +10,7 @@ defmodule RataParser.Parser do
 
   # Forward declarations for recursive rules
   defp expression(combinator \\ empty()), do: pipe_expression(combinator)
-  defp statement(combinator \\ empty()), do: choice(combinator, [assert_statement(), return_statement(), assignment()])
+  defp statement(combinator \\ empty()), do: choice(combinator, [assert_statement(), return_statement(), raise_statement(), reraise_statement(), assignment()])
   defp library_import(combinator \\ empty()), do: parsec(combinator, :library_import)
 
   # Library import parsing: library ModuleName as alias
@@ -63,6 +63,28 @@ defmodule RataParser.Parser do
     |> tag(parsec(:expression), :condition)
     |> wrap()
     |> map({__MODULE__, :build_assert, []})
+
+  raise_statement = 
+    ignore(tag(:raise))
+    |> tag(parsec(:expression), :exception)
+    |> optional(
+      ignore(tag(:comma))
+      |> tag(parsec(:expression), :message)
+    )
+    |> wrap()
+    |> map({__MODULE__, :build_raise, []})
+
+  reraise_statement = 
+    ignore(tag(:reraise))
+    |> optional(
+      tag(parsec(:expression), :exception)
+      |> optional(
+        ignore(tag(:comma))
+        |> tag(parsec(:expression), :stacktrace)
+      )
+    )
+    |> wrap()
+    |> map({__MODULE__, :build_reraise, []})
 
   # Expression parsing with operator precedence
   
@@ -134,6 +156,7 @@ defmodule RataParser.Parser do
       function_call(),
       function_definition(),
       if_expression(),
+      try_expression(),
       ignore(tag(:left_paren)) |> parsec(:expression) |> ignore(tag(:right_paren))
     ])
 
@@ -281,6 +304,45 @@ defmodule RataParser.Parser do
     |> wrap()
     |> map({__MODULE__, :build_if, []})
 
+  # Try expressions: try { body } catch { clauses } after { cleanup }
+  try_expression = 
+    ignore(tag(:try))
+    |> ignore(tag(:left_brace))
+    |> tag(repeat(parsec(:statement)), :body)
+    |> ignore(tag(:right_brace))
+    |> optional(
+      ignore(tag(:catch))
+      |> ignore(tag(:left_brace))
+      |> tag(repeat(parsec(:catch_clause)), :catch_clauses)
+      |> ignore(tag(:right_brace))
+    )
+    |> optional(
+      ignore(tag(:else))
+      |> ignore(tag(:left_brace))
+      |> tag(repeat(parsec(:statement)), :else_clause)
+      |> ignore(tag(:right_brace))
+    )
+    |> optional(
+      ignore(tag(:after))
+      |> ignore(tag(:left_brace))
+      |> tag(repeat(parsec(:statement)), :after_clause)
+      |> ignore(tag(:right_brace))
+    )
+    |> wrap()
+    |> map({__MODULE__, :build_try, []})
+
+  # Catch clauses: pattern -> body
+  catch_clause = 
+    tag(parsec(:expression), :pattern)
+    |> optional(
+      ignore(tag(:when))
+      |> tag(parsec(:expression), :guard)
+    )
+    |> ignore(tag(:arrow))
+    |> tag(repeat(parsec(:statement)), :body)
+    |> wrap()
+    |> map({__MODULE__, :build_catch_clause, []})
+
   # Parameter list: name: type, name: type
   # Type can be an identifier or a built-in type keyword
   type_annotation = 
@@ -319,6 +381,7 @@ defmodule RataParser.Parser do
   defparsec :expression, expression()
   defparsec :parameter_list, parameter_list
   defparsec :key_value_pair, key_value_pair
+  defparsec :catch_clause, catch_clause
   
   # REPL parser entry point - handles both statements and expressions
   defparsec :repl_parse, choice([statement(), expression()]) |> eos()
@@ -351,6 +414,38 @@ defmodule RataParser.Parser do
 
   def build_assert([{:condition, condition}]) do
     %AST.AssertStatement{condition: condition}
+  end
+
+  def build_raise([{:exception, exception}]) do
+    %AST.RaiseStatement{exception: exception, message: nil}
+  end
+  def build_raise([{:exception, exception}, {:message, message}]) do
+    %AST.RaiseStatement{exception: exception, message: message}
+  end
+
+  def build_reraise([]) do
+    %AST.ReraisStatement{exception: nil, stacktrace: nil}
+  end
+  def build_reraise([{:exception, exception}]) do
+    %AST.ReraisStatement{exception: exception, stacktrace: nil}
+  end
+  def build_reraise([{:exception, exception}, {:stacktrace, stacktrace}]) do
+    %AST.ReraisStatement{exception: exception, stacktrace: stacktrace}
+  end
+
+  def build_try(args) do
+    body = Keyword.get(args, :body, [])
+    catch_clauses = Keyword.get(args, :catch_clauses, [])
+    else_clause = Keyword.get(args, :else_clause)
+    after_clause = Keyword.get(args, :after_clause)
+    %AST.TryExpression{body: body, catch_clauses: catch_clauses, else_clause: else_clause, after_clause: after_clause}
+  end
+
+  def build_catch_clause([{:pattern, pattern}, {:body, body}]) do
+    %AST.CatchClause{pattern: pattern, guard: nil, body: body}
+  end
+  def build_catch_clause([{:pattern, pattern}, {:guard, guard}, {:body, body}]) do
+    %AST.CatchClause{pattern: pattern, guard: guard, body: body}
   end
 
   def build_literal([{:value, value}]) do

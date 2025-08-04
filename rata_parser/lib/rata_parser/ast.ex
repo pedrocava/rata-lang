@@ -41,6 +41,39 @@ defmodule RataParser.AST do
     @type t :: %__MODULE__{condition: Expression.t()}
   end
 
+  defmodule TryExpression do
+    @moduledoc "Represents try expression: try { body } catch { clauses } after { cleanup }"
+    defstruct [:body, :catch_clauses, :else_clause, :after_clause]
+    @type t :: %__MODULE__{
+            body: [Statement.t()],
+            catch_clauses: [CatchClause.t()],
+            else_clause: [Statement.t()] | nil,
+            after_clause: [Statement.t()] | nil
+          }
+  end
+
+  defmodule CatchClause do
+    @moduledoc "Represents catch clause: exception_pattern -> body"
+    defstruct [:pattern, :guard, :body]
+    @type t :: %__MODULE__{
+            pattern: Expression.t(),
+            guard: Expression.t() | nil,
+            body: [Statement.t()]
+          }
+  end
+
+  defmodule RaiseStatement do
+    @moduledoc "Represents raise statement: raise exception or raise exception, message"
+    defstruct [:exception, :message]
+    @type t :: %__MODULE__{exception: Expression.t(), message: Expression.t() | nil}
+  end
+
+  defmodule ReraisStatement do
+    @moduledoc "Represents reraise statement: reraise or reraise exception, stacktrace"
+    defstruct [:exception, :stacktrace]
+    @type t :: %__MODULE__{exception: Expression.t() | nil, stacktrace: Expression.t() | nil}
+  end
+
   # Expression types
   defmodule Literal do
     @moduledoc "Represents literal values: numbers, strings"
@@ -156,7 +189,7 @@ defmodule RataParser.AST do
   end
 
   # Type unions for convenience
-  @type Statement :: LibraryImport.t() | Assignment.t() | FunctionDef.t() | Return.t() | AssertStatement.t()
+  @type Statement :: LibraryImport.t() | Assignment.t() | FunctionDef.t() | Return.t() | AssertStatement.t() | RaiseStatement.t() | ReraisStatement.t()
   @type Expression ::
           Literal.t()
           | InterpolatedString.t()
@@ -175,4 +208,5 @@ defmodule RataParser.AST do
           | Lambda.t()
           | LambdaParam.t()
           | Pipe.t()
+          | TryExpression.t()
 end

@@ -1,0 +1,77 @@
+# Exception Handling Examples for Rata Language
+
+module "ExceptionExamples" {
+  
+  # Simple try/catch example
+  result1 = try {
+    raise Core.runtime_error("Something went wrong")
+  } catch {
+    :runtime_error -> "Caught runtime error"
+    error -> f"Caught other error: {error}"
+  }
+
+  # Try/catch with after clause
+  result2 = try {
+    x = 10 / 0
+  } catch {
+    :division_by_zero -> "Cannot divide by zero"
+  } after {
+    Core.debug("Cleanup always runs")
+  }
+
+  # Try/catch/else pattern
+  result3 = try {
+    value = 42
+    return value
+  } catch {
+    _ -> "Error occurred"
+  } else {
+    Core.debug("No exception occurred")
+  }
+
+  # Pattern matching in catch clauses
+  result4 = try {
+    raise Core.argument_error("Invalid argument")
+  } catch {
+    {:argument_error, msg} -> f"Argument error: {msg}"
+    {:runtime_error, msg} -> f"Runtime error: {msg}"
+    other -> f"Other error: {other}"
+  }
+
+  # Raise with custom message
+  custom_exception = function() {
+    raise Core.exception("custom_error", "This is a custom error")
+  }
+
+  # Reraise example
+  handle_and_reraise = function(operation) {
+    try {
+      operation()
+    } catch {
+      error -> {
+        Core.debug(f"Logging error: {error}")
+        reraise error
+      }
+    }
+  }
+
+  # Nested try/catch
+  nested_example = try {
+    try {
+      raise Core.type_error("Inner error")
+    } catch {
+      :runtime_error -> "Won't match"
+    }
+  } catch {
+    :type_error -> "Caught from inner try"
+  }
+
+  # Guard clauses in catch
+  guarded_catch = try {
+    raise Core.runtime_error("Test message")
+  } catch {
+    {:runtime_error, msg} when msg == "Test message" -> "Exact match"
+    {:runtime_error, msg} -> f"Other runtime error: {msg}"
+  }
+
+}

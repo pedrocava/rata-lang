@@ -23,6 +23,7 @@ A comprehensive implementation plan for building the Rata programming language f
 - [ ] **Core**: Basic language primitives, control flow, assert statements
 - [x] **Module**: Module definition, import/export system (import side completed), `__module__` references
 - [x] **Math**: Basic arithmetic operators (+, -, *, ^) and mathematical functions
+- [ ] **Exception Handling**: try/catch/raise/reraise/after constructs for error handling
 - [ ] Create minimal runtime that can execute example-module.rata
 - [ ] Create test runner that can execute example-tests.rata
 

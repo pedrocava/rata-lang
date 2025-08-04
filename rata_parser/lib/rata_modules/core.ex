@@ -67,6 +67,65 @@ defmodule RataModules.Core do
     {:ok, value}
   end
 
+  @doc """
+  Create a new exception with the given type.
+  """
+  def exception(type) when is_atom(type) do
+    {:ok, %{exception: type, message: nil, stacktrace: nil}}
+  end
+  def exception(type) when is_binary(type) do
+    {:ok, %{exception: String.to_atom(type), message: nil, stacktrace: nil}}
+  end
+
+  @doc """
+  Create a new exception with type and message.
+  """
+  def exception(type, message) when is_atom(type) do
+    {:ok, %{exception: type, message: message, stacktrace: nil}}
+  end
+  def exception(type, message) when is_binary(type) do
+    {:ok, %{exception: String.to_atom(type), message: message, stacktrace: nil}}
+  end
+
+  @doc """
+  Create a RuntimeError exception (most common type).
+  """
+  def runtime_error(message) do
+    {:ok, %{exception: :runtime_error, message: message, stacktrace: nil}}
+  end
+
+  @doc """
+  Create an ArgumentError exception.
+  """
+  def argument_error(message) do
+    {:ok, %{exception: :argument_error, message: message, stacktrace: nil}}
+  end
+
+  @doc """
+  Create a TypeError exception.
+  """
+  def type_error(message) do
+    {:ok, %{exception: :type_error, message: message, stacktrace: nil}}
+  end
+
+  @doc """
+  Get the exception type from an exception.
+  """
+  def exception_type(%{exception: type}), do: {:ok, type}
+  def exception_type(_), do: {:error, "not an exception"}
+
+  @doc """
+  Get the message from an exception.
+  """
+  def exception_message(%{message: message}), do: {:ok, message}
+  def exception_message(_), do: {:error, "not an exception"}
+
+  @doc """
+  Check if a value is an exception.
+  """
+  def is_exception(%{exception: _}), do: {:ok, true}
+  def is_exception(_), do: {:ok, false}
+
   # Helper function to determine truthiness (same as evaluator)
   defp is_truthy(nil), do: false
   defp is_truthy(false), do: false

@@ -208,6 +208,83 @@ defmodule RataRepl.Evaluator do
     end
   end
 
+  # Try expressions - implement try/catch/after semantics
+  def eval(%AST.TryExpression{body: body, catch_clauses: catch_clauses, else_clause: else_clause, after_clause: after_clause}, context) do
+    try do
+      case eval_statements(body, context) do
+        {:ok, result, new_context} ->
+          # Execute else clause if no exception occurred
+          case else_clause do
+            nil -> 
+              execute_after_clause(after_clause, new_context, result)
+            else_statements ->
+              case eval_statements(else_statements, new_context) do
+                {:ok, else_result, final_context} ->
+                  execute_after_clause(after_clause, final_context, else_result)
+                {:error, _} = error ->
+                  execute_after_clause(after_clause, new_context, nil)
+                  error
+              end
+          end
+        {:error, exception} ->
+          # Try to match against catch clauses
+          case match_catch_clauses(exception, catch_clauses, context) do
+            {:ok, catch_result, catch_context} ->
+              execute_after_clause(after_clause, catch_context, catch_result)
+            {:error, _} = unhandled_error ->
+              execute_after_clause(after_clause, context, nil)
+              unhandled_error
+          end
+      end
+    after
+      # Ensure after clause always runs, even if there are internal errors
+      case after_clause do
+        nil -> :ok
+        _ -> :ok  # Already handled in the main flow
+      end
+    end
+  end
+
+  # Raise statements - throw an exception
+  def eval(%AST.RaiseStatement{exception: exception_ast, message: message_ast}, context) do
+    case eval(exception_ast, context) do
+      {:ok, exception, new_context} ->
+        case message_ast do
+          nil ->
+            {:error, %{exception: exception, message: nil}}
+          message_expr ->
+            case eval(message_expr, new_context) do
+              {:ok, message, final_context} ->
+                {:error, %{exception: exception, message: message}}
+              error -> error
+            end
+        end
+      error -> error
+    end
+  end
+
+  # Reraise statements - re-throw the last exception
+  def eval(%AST.ReraisStatement{exception: nil, stacktrace: nil}, context) do
+    # Simple reraise - would normally use the last caught exception
+    {:error, "reraise: no exception to re-raise"}
+  end
+  def eval(%AST.ReraisStatement{exception: exception_ast, stacktrace: stacktrace_ast}, context) do
+    case eval(exception_ast, context) do
+      {:ok, exception, new_context} ->
+        case stacktrace_ast do
+          nil ->
+            {:error, %{exception: exception, stacktrace: nil}}
+          stacktrace_expr ->
+            case eval(stacktrace_expr, new_context) do
+              {:ok, stacktrace, final_context} ->
+                {:error, %{exception: exception, stacktrace: stacktrace}}
+              error -> error
+            end
+        end
+      error -> error
+    end
+  end
+
   # Fallback for unhandled AST nodes
   def eval(ast, _context) do
     {:error, "evaluation not implemented for #{inspect(ast.__struct__)}"}
@@ -434,4 +511,98 @@ defmodule RataRepl.Evaluator do
   defp is_truthy(0.0), do: false
   defp is_truthy(""), do: false
   defp is_truthy(_), do: true
+
+  # Helper function to evaluate multiple statements (like in try body or catch body)
+  defp eval_statements([], context), do: {:ok, nil, context}
+  defp eval_statements([stmt], context) do
+    eval(stmt, context)
+  end
+  defp eval_statements([stmt | rest], context) do
+    case eval(stmt, context) do
+      {:ok, _value, new_context} -> eval_statements(rest, new_context)
+      error -> error
+    end
+  end
+
+  # Helper function to execute after clause
+  defp execute_after_clause(nil, context, result), do: {:ok, result, context}
+  defp execute_after_clause(after_statements, context, result) do
+    case eval_statements(after_statements, context) do
+      {:ok, _after_result, final_context} ->
+        {:ok, result, final_context}
+      {:error, _} ->
+        # After clause failed, but we still return the original result
+        {:ok, result, context}
+    end
+  end
+
+  # Helper function to match exception against catch clauses
+  defp match_catch_clauses(_exception, [], _context) do
+    {:error, "unhandled exception"}
+  end
+  defp match_catch_clauses(exception, [catch_clause | rest], context) do
+    case match_catch_clause(exception, catch_clause, context) do
+      {:match, result, new_context} -> {:ok, result, new_context}
+      :no_match -> match_catch_clauses(exception, rest, context)
+      {:error, _} = error -> error
+    end
+  end
+
+  # Helper function to match a single catch clause
+  defp match_catch_clause(exception, %AST.CatchClause{pattern: pattern, guard: guard, body: body}, context) do
+    case pattern_match(exception, pattern, context) do
+      {:match, bindings, pattern_context} ->
+        # Check guard if present
+        guard_context = Map.merge(pattern_context, bindings)
+        case check_guard(guard, guard_context) do
+          true ->
+            # Execute catch body with pattern bindings
+            case eval_statements(body, guard_context) do
+              {:ok, result, final_context} -> {:match, result, final_context}
+              error -> error
+            end
+          false ->
+            :no_match
+        end
+      :no_match ->
+        :no_match
+    end
+  end
+
+  # Helper function for pattern matching (simplified implementation)
+  defp pattern_match(exception, %AST.Identifier{name: var_name}, context) do
+    # Bind exception to variable
+    {:match, %{var_name => exception}, context}
+  end
+  defp pattern_match(exception, %AST.Tuple{elements: [%AST.Symbol{name: error_type}, %AST.Identifier{name: var_name}]}, context) do
+    # Match {:error, var} patterns
+    case exception do
+      %{exception: ^error_type} = ex ->
+        {:match, %{var_name => ex}, context}
+      _ ->
+        :no_match
+    end
+  end
+  defp pattern_match(exception, %AST.Symbol{name: symbol_name}, context) do
+    # Match specific exception types
+    case exception do
+      %{exception: ^symbol_name} ->
+        {:match, %{}, context}
+      _ ->
+        :no_match
+    end
+  end
+  defp pattern_match(_exception, _pattern, _context) do
+    # Fallback - no match
+    :no_match
+  end
+
+  # Helper function to check guard conditions
+  defp check_guard(nil, _context), do: true
+  defp check_guard(guard_expr, context) do
+    case eval(guard_expr, context) do
+      {:ok, result, _} -> is_truthy(result)
+      {:error, _} -> false
+    end
+  end
 end
