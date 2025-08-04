@@ -1,35 +1,35 @@
-# Exception Handling Examples for Rata Language
-
 module "ExceptionExamples" {
   
-  # Simple try/catch example
   result1 = try {
-    raise Core.runtime_error("Something went wrong")
-  } catch {
-    :runtime_error -> "Caught runtime error"
-    error -> f"Caught other error: {error}"
+    
+    if runif() > .5 {
+      raise Core.runtime_error("Something went wrong")
+    } else {
+      raise Core.value_error("Oopsie")
+    }
+  
+  } catch as error {
+    :runtime_error -> Log.info(f"Caught runtime error: {error}")
+    :value_error -> Log.info(f"Value error: {error}"
   }
 
-  # Try/catch with after clause
   result2 = try {
     x = 10 / 0
   } catch {
     :division_by_zero -> "Cannot divide by zero"
   } after {
-    Core.debug("Cleanup always runs")
+    Log.debug("The {after} clause only runs after an error!"
   }
 
-  # Try/catch/else pattern
   result3 = try {
     value = 42
     return value
   } catch {
     _ -> "Error occurred"
   } else {
-    Core.debug("No exception occurred")
+    Log.debug("No exception occurred, and ")
   }
 
-  # Pattern matching in catch clauses
   result4 = try {
     raise Core.argument_error("Invalid argument")
   } catch {
@@ -38,12 +38,10 @@ module "ExceptionExamples" {
     other -> f"Other error: {other}"
   }
 
-  # Raise with custom message
   custom_exception = function() {
-    raise Core.exception("custom_error", "This is a custom error")
+    raise Core.exception(:my_custom_error, "This is a custom error")
   }
 
-  # Reraise example
   handle_and_reraise = function(operation) {
     try {
       operation()
@@ -55,7 +53,6 @@ module "ExceptionExamples" {
     }
   }
 
-  # Nested try/catch
   nested_example = try {
     try {
       raise Core.type_error("Inner error")
@@ -66,7 +63,6 @@ module "ExceptionExamples" {
     :type_error -> "Caught from inner try"
   }
 
-  # Guard clauses in catch
   guarded_catch = try {
     raise Core.runtime_error("Test message")
   } catch {
