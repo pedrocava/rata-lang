@@ -2,8 +2,6 @@
 
 <div align="center">
   <img src="assets/rata-logo.png" alt="Rata Logo" width="200"/>
-  
-  *A data engineering language combining R's tidyverse ergonomics with Python-like syntax, running on Elixir's BEAM*
 </div>
 
 ## The idea
