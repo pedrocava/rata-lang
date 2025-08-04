@@ -12,14 +12,6 @@ Rata combines what I like about three programming languages I had professional c
 
 This is being vibe coded and takes a lot of inspiration from [T](https://github.com/b-rodrigues/tlang).
 
-## Design Principles
-
-- **💬 REPL-first**: Interactive development experience that encourages exploration  
-- **🔒 Immutable by default**: Standard library avoids side-effects by design
-- **📊 1-indexed**: Following R conventions for intuitive data work
-- **🏷️ Optional typing**: Add types when you need them: `function(n: int) { n + 1 }`
-- **🚫 No scalars**: Every value is a single-entry vector, eliminating scalar/vector confusion
-
 ## Code Examples
 
 ### RNA to DNA Transcription
