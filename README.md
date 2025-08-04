@@ -38,7 +38,7 @@ module BirdCount {
   
   # Check if any day had zero birds
   has_day_without_birds = function(counts: [int]) {
-    Enum.any(counts, ~ .x == 0)
+    Enum.some(counts, ~ .x == 0)
   }
   
   # Calculate total birds across all days
