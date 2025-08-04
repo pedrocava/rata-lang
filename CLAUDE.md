@@ -21,19 +21,21 @@ This repository contains both the specification and initial implementation for *
 
 ## Common Commands
 
+**IMPORTANT: Do not run tests (`mix test`) or Elixir commands (`elixir repl.exs`) until this restriction is explicitly overridden by the user.**
+
 ### Development (in rata_parser directory)
 ```bash
 # Install dependencies
 mix deps.get
 
-# Run tests
-mix test
+# Run tests (DO NOT RUN - RESTRICTED)
+# mix test
 
-# Start interactive REPL 
-elixir repl.exs
+# Start interactive REPL (DO NOT RUN - RESTRICTED)
+# elixir repl.exs
 
-# Run specific test files
-mix test test/rata_parser_test.exs
+# Run specific test files (DO NOT RUN - RESTRICTED)
+# mix test test/rata_parser_test.exs
 ```
 
 ### REPL Commands

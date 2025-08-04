@@ -9,6 +9,8 @@ defmodule RataRepl.Evaluator do
   alias RataParser.AST
   alias RataModules.Math
   alias RataModules.Core
+  alias RataModules.Log
+  alias RataModules.Stats
 
   @doc """
   Evaluate an AST node in the given context.
@@ -367,6 +369,30 @@ defmodule RataRepl.Evaluator do
       {:ok, {Core, function_atom}}
     else
       {:error, "undefined function: Core.#{function_name}"}
+    end
+  end
+  defp resolve_module_function("Log", function_name) do
+    function_atom = String.to_atom(function_name)
+    if function_exported?(Log, function_atom, 0) do
+      {:ok, {Log, function_atom}}
+    elsif function_exported?(Log, function_atom, 1) do
+      {:ok, {Log, function_atom}}
+    elsif function_exported?(Log, function_atom, 2) do
+      {:ok, {Log, function_atom}}
+    else
+      {:error, "undefined function: Log.#{function_name}"}
+    end
+  end
+  defp resolve_module_function("Stats", function_name) do
+    function_atom = String.to_atom(function_name)
+    if function_exported?(Stats, function_atom, 0) do
+      {:ok, {Stats, function_atom}}
+    elsif function_exported?(Stats, function_atom, 1) do
+      {:ok, {Stats, function_atom}}
+    elsif function_exported?(Stats, function_atom, 2) do
+      {:ok, {Stats, function_atom}}
+    else
+      {:error, "undefined function: Stats.#{function_name}"}
     end
   end
   defp resolve_module_function(module_name, function_name) do

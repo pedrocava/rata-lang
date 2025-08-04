@@ -2,7 +2,7 @@ module "ExceptionExamples" {
   
   result1 = try {
     
-    if runif() > .5 {
+    if Stats.runif() > .5 {
       raise Core.runtime_error("Something went wrong")
     } else {
       raise Core.value_error("Oopsie")
