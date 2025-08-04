@@ -136,12 +136,7 @@ elixir repl.exs
 
 ## Project Status
 
-Rata is currently in active development. The parser and basic REPL are functional, with ongoing work on:
-
-- Standard library modules (Vector, Maps, File, Database connectors)
-- Advanced type system features
-- Cloud SDK integrations
-- Production tooling
+Rata is still highly experimental and my side-project. Wanna talk about it? Hit me up on [~twitter~ X](https://x.com/pedroocava).
 
 ## Documentation
 
@@ -150,10 +145,5 @@ Rata is currently in active development. The parser and basic REPL are functiona
 - [Standard Library Modules](specs/module-list.md)
 - [Sample Code](specs/samples/)
 
-## Contributing
-
-Rata is being "vibecoded into existence" with an iterative, community-driven approach. Check out the [roadmap](specs/ROADMAP.md) to see what's next and how you can help!
-
----
 
 *Built with ❤️ for the data engineering community*
