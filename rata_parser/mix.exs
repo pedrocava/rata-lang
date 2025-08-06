@@ -19,7 +19,8 @@ defmodule RataParser.MixProject do
 
   defp deps do
     [
-      {:nimble_parsec, "~> 1.4"}
+      {:nimble_parsec, "~> 1.4"},
+      {:explorer, "~> 0.8"}
     ]
   end
 end
