@@ -63,6 +63,26 @@ defmodule RataRepl.Evaluator do
   end
 
   # Binary operations
+  def eval(%AST.BinaryOp{left: left_ast, operator: :pipe, right: right_ast}, context) do
+    # Pipe operations: left |> right
+    # The left value becomes the first argument to the right function call
+    with {:ok, left_val, context1} <- eval(left_ast, context) do
+      case right_ast do
+        %AST.FunctionCall{function: func_ast, args: args_ast} ->
+          # Evaluate the function and existing args first
+          with {:ok, func, context2} <- eval(func_ast, context1),
+               {:ok, args, context3} <- eval_args(args_ast, context2) do
+            # Insert left_val as the first argument
+            new_args = [left_val | args]
+            # Call the function with left_val as first argument
+            call_piped_function(func, new_args, context3)
+          end
+        _ ->
+          {:error, "pipe operator can only be used with function calls"}
+      end
+    end
+  end
+
   def eval(%AST.BinaryOp{left: left_ast, operator: op, right: right_ast}, context) do
     with {:ok, left_val, context1} <- eval(left_ast, context),
          {:ok, right_val, context2} <- eval(right_ast, context1) do
@@ -456,6 +476,27 @@ defmodule RataRepl.Evaluator do
         {:ok, result, _lambda_ctx} -> {:ok, result, context}
         error -> error
       end
+    end
+  end
+
+  # Helper function to call functions in pipe operations
+  defp call_piped_function(func, args, context) do
+    case func do
+      {module, function_name} when is_atom(module) and is_atom(function_name) ->
+        # Module function call
+        case apply(module, function_name, args) do
+          {:ok, result} -> {:ok, result, context}
+          {:error, reason} -> {:error, reason}
+          result -> {:ok, result, context}  # Handle direct returns
+        end
+      {:lambda, body, params} ->
+        # Lambda function call - bind parameters and evaluate body
+        call_lambda(body, params, args, context)
+      {:function, params, body} ->
+        # Regular function call - bind parameters and evaluate body with return handling
+        call_function(params, body, args, context)
+      _ ->
+        {:error, "unsupported function type in pipe: #{inspect(func)}"}
     end
   end
 

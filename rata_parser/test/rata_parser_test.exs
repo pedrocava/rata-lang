@@ -176,6 +176,49 @@ defmodule RataParserTest do
       } = assignment
     end
 
+    test "parses pipe chains" do
+      tokens = [
+        :module, {:identifier, "Test"}, :left_brace,
+        {:identifier, "result"}, :assign, {:integer, 5}, :pipe, {:identifier, "add"}, :left_paren, {:integer, 3}, :right_paren, :pipe, {:identifier, "multiply"}, :left_paren, {:integer, 2}, :right_paren,
+        :right_brace
+      ]
+      
+      assert {:ok, ast, "", %{}, _, _} = Parser.parse(tokens)
+      assert %AST.Module{body: [assignment]} = ast
+      assert %AST.Assignment{
+        value: %AST.BinaryOp{
+          left: %AST.BinaryOp{
+            left: %AST.Literal{value: 5},
+            operator: :pipe,
+            right: %AST.FunctionCall{function: %AST.Identifier{name: "add"}, args: [%AST.Literal{value: 3}]}
+          },
+          operator: :pipe,
+          right: %AST.FunctionCall{function: %AST.Identifier{name: "multiply"}, args: [%AST.Literal{value: 2}]}
+        }
+      } = assignment
+    end
+
+    test "parses module function pipes" do
+      tokens = [
+        :module, {:identifier, "Test"}, :left_brace,
+        {:identifier, "result"}, :assign, {:integer, 8}, :pipe, {:identifier, "Math"}, :dot, {:identifier, "add"}, :left_paren, {:integer, 2}, :right_paren,
+        :right_brace
+      ]
+      
+      assert {:ok, ast, "", %{}, _, _} = Parser.parse(tokens)
+      assert %AST.Module{body: [assignment]} = ast
+      assert %AST.Assignment{
+        value: %AST.BinaryOp{
+          left: %AST.Literal{value: 8},
+          operator: :pipe,
+          right: %AST.FunctionCall{
+            function: %AST.QualifiedIdentifier{module: "Math", name: "add"}, 
+            args: [%AST.Literal{value: 2}]
+          }
+        }
+      } = assignment
+    end
+
     test "parses symbols" do
       tokens = [
         :module, {:identifier, "Test"}, :left_brace,
