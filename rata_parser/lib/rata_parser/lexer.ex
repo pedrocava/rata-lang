@@ -31,6 +31,7 @@ defmodule RataParser.Lexer do
       string("return") |> replace(:return),
       string("if") |> replace(:if),
       string("else") |> replace(:else),
+      string("case") |> replace(:case),
       string("as") |> replace(:as),
       string("assert") |> replace(:assert),
       string("try") |> replace(:try),

@@ -157,6 +157,7 @@ defmodule RataParser.Parser do
       function_call(),
       function_definition(),
       if_expression(),
+      case_expression(),
       try_expression(),
       ignore(tag(:left_paren)) |> parsec(:expression) |> ignore(tag(:right_paren))
     ])
@@ -351,7 +352,7 @@ defmodule RataParser.Parser do
 
   # Catch clauses: pattern -> body
   catch_clause = 
-    tag(parsec(:expression), :pattern)
+    tag(parsec(:pattern), :pattern)
     |> optional(
       ignore(tag(:when))
       |> tag(parsec(:expression), :guard)
@@ -400,9 +401,89 @@ defmodule RataParser.Parser do
   defparsec :parameter_list, parameter_list
   defparsec :key_value_pair, key_value_pair
   defparsec :catch_clause, catch_clause
+  defparsec :pattern, pattern
+  defparsec :tuple_pattern, tuple_pattern
+  defparsec :symbol_pattern, symbol_pattern
+  defparsec :literal_pattern, literal_pattern
+  defparsec :identifier_pattern, identifier_pattern
+  defparsec :wildcard_pattern, wildcard_pattern
+  defparsec :case_clause, case_clause
   
   # REPL parser entry point - handles both statements and expressions
   defparsec :repl_parse, choice([statement(), expression()]) |> eos()
+
+  # Pattern parsing for case expressions and catch clauses
+  pattern = 
+    choice([
+      parsec(:tuple_pattern),
+      parsec(:symbol_pattern),
+      parsec(:literal_pattern),
+      parsec(:identifier_pattern),
+      parsec(:wildcard_pattern)
+    ])
+
+  # Tuple patterns: {:ok, value}, {:error, message}
+  tuple_pattern = 
+    ignore(tag(:left_brace))
+    |> optional(
+      parsec(:pattern)
+      |> repeat(
+        ignore(tag(:comma))
+        |> parsec(:pattern)
+      )
+    )
+    |> ignore(tag(:right_brace))
+    |> reduce({__MODULE__, :build_tuple_pattern, []})
+
+  # Symbol patterns: :ok, :error
+  symbol_pattern = 
+    unwrap_and_tag(tag(:symbol), :name)
+    |> map({__MODULE__, :build_symbol_pattern, []})
+
+  # Literal patterns: 42, "hello"
+  literal_pattern = 
+    choice([
+      unwrap_and_tag(tag(:integer), :value) |> map({__MODULE__, :build_literal_pattern, []}),
+      unwrap_and_tag(tag(:float), :value) |> map({__MODULE__, :build_literal_pattern, []}),
+      unwrap_and_tag(tag(:string), :value) |> map({__MODULE__, :build_literal_pattern, []})
+    ])
+
+  # Identifier patterns (variable bindings): x, value
+  identifier_pattern = 
+    unwrap_and_tag(tag(:identifier), :name)
+    |> map({__MODULE__, :build_identifier_pattern, []})
+
+  # Wildcard patterns: _
+  wildcard_pattern = 
+    tag(:underscore)
+    |> map({__MODULE__, :build_wildcard_pattern, []})
+
+  # Case clauses: pattern -> expression or pattern when guard -> expression
+  case_clause = 
+    parsec(:pattern)
+    |> optional(
+      ignore(tag(:when))
+      |> parsec(:expression)
+      |> unwrap_and_tag(:guard)
+    )
+    |> ignore(tag(:arrow))
+    |> parsec(:expression)
+    |> reduce({__MODULE__, :build_case_clause, []})
+
+  # Case expressions: case value { pattern -> result, pattern -> result }
+  case_expression = 
+    ignore(tag(:case))
+    |> parsec(:expression)
+    |> ignore(tag(:left_brace))
+    |> optional(
+      parsec(:case_clause)
+      |> repeat(
+        ignore(tag(:comma))
+        |> parsec(:case_clause)
+      )
+    )
+    |> ignore(tag(:right_brace))
+    |> reduce({__MODULE__, :build_case_expression, []})
 
   # Helper functions to build AST nodes
   def build_library_import(args) do
@@ -609,8 +690,12 @@ defmodule RataParser.Parser do
     # Find matching closing brace
     case find_closing_brace(rest, 0) do
       {expr_content, remaining} ->
-        # Parse the expression content (simplified - just create an identifier for now)
-        expr_ast = %AST.Identifier{name: String.trim(expr_content)}
+        # Parse the expression content using the full expression parser
+        expr_content_trimmed = String.trim(expr_content)
+        expr_ast = case parse_f_string_expression(expr_content_trimmed) do
+          {:ok, ast} -> ast
+          {:error, _} -> %AST.Identifier{name: expr_content_trimmed}  # Fallback to identifier
+        end
         new_parts = if current_string != "", do: parts ++ [current_string, expr_ast], else: parts ++ [expr_ast]
         parse_f_string_parts(remaining, new_parts, "")
       :no_match ->
@@ -644,6 +729,39 @@ defmodule RataParser.Parser do
   defp find_closing_brace(<<char::utf8, rest::binary>>, depth, acc) do
     find_closing_brace(rest, depth, acc <> <<char::utf8>>)
   end
+
+  # Helper function to parse expressions inside f-strings
+  defp parse_f_string_expression(expr_content) do
+    with {:ok, tokens} <- RataParser.Lexer.tokenize(expr_content),
+         {:ok, [ast], "", _, _, _} <- expression(tokens) do
+      {:ok, ast}
+    else
+      _ -> {:error, :parse_failed}
+    end
+  end
+
+  # Helper functions for building pattern AST nodes
+  def build_tuple_pattern([]), do: %AST.TuplePattern{elements: []}
+  def build_tuple_pattern(elements), do: %AST.TuplePattern{elements: elements}
+
+  def build_symbol_pattern([name: name]), do: %AST.SymbolPattern{name: name}
+
+  def build_literal_pattern([value: value]), do: %AST.LiteralPattern{value: value}
+
+  def build_identifier_pattern([name: name]), do: %AST.IdentifierPattern{name: name}
+
+  def build_wildcard_pattern(_), do: %AST.WildcardPattern{}
+
+  def build_case_clause([pattern, guard: guard, expression]) do
+    %AST.CaseClause{pattern: pattern, guard: guard, body: expression}
+  end
+
+  def build_case_clause([pattern, expression]) do
+    %AST.CaseClause{pattern: pattern, guard: nil, body: expression}
+  end
+
+  def build_case_expression([subject]), do: %AST.CaseExpression{subject: subject, clauses: []}
+  def build_case_expression([subject | clauses]), do: %AST.CaseExpression{subject: subject, clauses: clauses}
 
   # Helper function to extract lambda parameters from an expression
   defp extract_lambda_params(%AST.LambdaParam{name: name}), do: [name]

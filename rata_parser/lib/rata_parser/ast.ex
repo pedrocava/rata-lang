@@ -182,10 +182,57 @@ defmodule RataParser.AST do
     @type t :: %__MODULE__{}
   end
 
+  defmodule CaseExpression do
+    @moduledoc "Represents case expressions: case value { pattern -> result, pattern -> result }"
+    defstruct [:subject, :clauses]
+    @type t :: %__MODULE__{subject: Expression.t(), clauses: [CaseClause.t()]}
+  end
+
+  defmodule CaseClause do
+    @moduledoc "Represents case clause: pattern -> result or pattern when guard -> result"
+    defstruct [:pattern, :guard, :body]
+    @type t :: %__MODULE__{
+            pattern: Pattern.t(),
+            guard: Expression.t() | nil,
+            body: Expression.t()
+          }
+  end
+
   defmodule Pipe do
     @moduledoc "Represents pipe operations: left \\> right"
     defstruct [:left, :right]
     @type t :: %__MODULE__{left: Expression.t(), right: Expression.t()}
+  end
+
+  # Pattern types for pattern matching
+  defmodule TuplePattern do
+    @moduledoc "Represents tuple patterns in case expressions: {:ok, value}"
+    defstruct [:elements]
+    @type t :: %__MODULE__{elements: [Pattern.t()]}
+  end
+
+  defmodule SymbolPattern do
+    @moduledoc "Represents symbol patterns: :ok, :error"
+    defstruct [:name]
+    @type t :: %__MODULE__{name: String.t()}
+  end
+
+  defmodule LiteralPattern do
+    @moduledoc "Represents literal patterns: 42, \"hello\""
+    defstruct [:value]
+    @type t :: %__MODULE__{value: number() | String.t()}
+  end
+
+  defmodule IdentifierPattern do
+    @moduledoc "Represents variable binding patterns: x, value"
+    defstruct [:name]
+    @type t :: %__MODULE__{name: String.t()}
+  end
+
+  defmodule WildcardPattern do
+    @moduledoc "Represents wildcard patterns: _"
+    defstruct []
+    @type t :: %__MODULE__{}
   end
 
   # Support types
@@ -216,5 +263,13 @@ defmodule RataParser.AST do
           | LambdaParam.t()
           | Pipe.t()
           | TryExpression.t()
+          | CaseExpression.t()
           | Underscore.t()
+
+  @type Pattern ::
+          TuplePattern.t()
+          | SymbolPattern.t()
+          | LiteralPattern.t()
+          | IdentifierPattern.t()
+          | WildcardPattern.t()
 end
