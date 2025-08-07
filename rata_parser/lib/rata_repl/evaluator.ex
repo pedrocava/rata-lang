@@ -16,6 +16,7 @@ defmodule RataRepl.Evaluator do
   alias RataModules.Table
   alias RataModules.Set
   alias RataModules.Enum
+  alias RataModules.File
 
   @doc """
   Evaluate an AST node in the given context.
