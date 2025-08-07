@@ -20,7 +20,7 @@ A comprehensive implementation plan for building the Rata programming language f
 - [x] Enhance pipe operation parsing (`|>`) - COMPLETED
 
 ### 1.2 Core Module Implementation
-- [ ] **Core**: Basic language primitives, control flow, assert statements
+- [x] **Core**: Basic language primitives, control flow, assert statements
 - [x] **Module**: Module definition, import/export system (import side completed), `__module__` references
 - [x] **Math**: Basic arithmetic operators (+, -, *, ^) and mathematical functions
 - [ ] **Exception Handling**: try/catch/raise/reraise/after constructs for error handling

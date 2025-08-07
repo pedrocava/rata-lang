@@ -10,6 +10,7 @@ Preferably most of this is implemented in Rata itself.
 - [ ] Maps: ditto for Maps.
 - [ ] List: Self-explanatory
 - [ ] Vector: You guessed it
+- [x] Set: Immutable set data structure with standard set operations (union, intersection, difference, membership testing, etc.)
 - [ ] Enum: Generics for Lists and Vectors. The basic functional programming toolkit for iterating over a sequence of stuff. Map, Reduce, Keep, Discard, Every, Some, None.
 - [ ] File: File system abstractions. Including reading and writing to files.
 - [ ] Dataload: Utilities to read data from most used file formats like csv, xls, txt, delimited data, dta, arrow, etc.
