@@ -509,11 +509,127 @@ defmodule RataParserTest do
     end
   end
 
+  describe "vectors" do
+    test "parses empty vector" do
+      source = """
+      module Test {
+        empty = []
+      }
+      """
+      
+      assert {:ok, ast} = RataParser.parse(source)
+      assert %AST.Module{
+        body: [%AST.Assignment{name: "empty", value: %AST.Vector{elements: []}}]
+      } = ast
+    end
+
+    test "parses multi-element vector" do
+      source = """
+      module Test {
+        numbers = [1, 2, 3, 4]
+      }
+      """
+      
+      assert {:ok, ast} = RataParser.parse(source)
+      assert %AST.Module{
+        body: [%AST.Assignment{
+          name: "numbers", 
+          value: %AST.Vector{
+            elements: [
+              %AST.Literal{value: 1},
+              %AST.Literal{value: 2}, 
+              %AST.Literal{value: 3},
+              %AST.Literal{value: 4}
+            ]
+          }
+        }]
+      } = ast
+    end
+
+    test "parses single-element vector (for parser validation)" do
+      source = """
+      module Test {
+        single = [42]
+      }
+      """
+      
+      assert {:ok, ast} = RataParser.parse(source)
+      assert %AST.Module{
+        body: [%AST.Assignment{
+          name: "single", 
+          value: %AST.Vector{elements: [%AST.Literal{value: 42}]}
+        }]
+      } = ast
+    end
+
+    test "parses symbol vector" do
+      source = """
+      module Test {
+        states = [:ok, :error, :pending]
+      }
+      """
+      
+      assert {:ok, ast} = RataParser.parse(source)
+      assert %AST.Module{
+        body: [%AST.Assignment{
+          name: "states",
+          value: %AST.Vector{
+            elements: [
+              %AST.Symbol{name: "ok"},
+              %AST.Symbol{name: "error"},
+              %AST.Symbol{name: "pending"}
+            ]
+          }
+        }]
+      } = ast
+    end
+  end
+
   describe "error handling" do
     test "handles invalid library syntax" do
       assert {:error, _} = RataParser.parse("library")
       assert {:error, _} = RataParser.parse("library as em")  
       assert {:error, _} = RataParser.parse("library ExampleModule as")
+    end
+  end
+
+  describe "evaluator error handling" do
+    test "single-element vectors throw friendly error" do
+      alias RataRepl.Evaluator
+      
+      single_vector = %AST.Vector{elements: [%AST.Literal{value: 42}]}
+      
+      assert {:error, error_message} = Evaluator.eval(single_vector, %{})
+      assert error_message == "Single-value vectors like [value] are not needed in Rata. Since every value is already a single-entry vector, just use 'value' directly instead of '[value]'."
+    end
+
+    test "multi-element vectors work correctly" do
+      alias RataRepl.Evaluator
+      
+      multi_vector = %AST.Vector{elements: [
+        %AST.Literal{value: 1},
+        %AST.Literal{value: 2}, 
+        %AST.Literal{value: 3}
+      ]}
+      
+      assert {:ok, [1, 2, 3], %{}} = Evaluator.eval(multi_vector, %{})
+    end
+
+    test "empty vectors work correctly" do
+      alias RataRepl.Evaluator
+      
+      empty_vector = %AST.Vector{elements: []}
+      
+      assert {:ok, [], %{}} = Evaluator.eval(empty_vector, %{})
+    end
+
+    test "single-element symbol vector throws error" do
+      alias RataRepl.Evaluator
+      
+      single_symbol_vector = %AST.Vector{elements: [%AST.Symbol{name: "ok"}]}
+      
+      assert {:error, error_message} = Evaluator.eval(single_symbol_vector, %{})
+      assert error_message == "Single-value vectors like [value] are not needed in Rata. Since every value is already a single-entry vector, just use 'value' directly instead of '[value]'."
     end
   end
 end

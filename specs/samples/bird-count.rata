@@ -9,7 +9,7 @@ module BirdCount {
 
   increment_day_count = function(counts: [int]) {
     if List.is_empty(counts) {
-      return [1]
+      return 1
     } else {
       today_count = List.first(counts)
       rest_counts = List.rest(counts)

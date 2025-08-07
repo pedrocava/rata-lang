@@ -175,10 +175,15 @@ defmodule RataRepl.Evaluator do
 
   # Vectors - create list from evaluated elements
   def eval(%AST.Vector{elements: elements}, context) do
-    case eval_list(elements, context) do
-      {:ok, values, final_context} ->
-        {:ok, values, final_context}
-      error -> error
+    # Check for single-element vectors and throw a friendly error
+    if length(elements) == 1 do
+      {:error, "Single-value vectors like [value] are not needed in Rata. Since every value is already a single-entry vector, just use 'value' directly instead of '[value]'."}
+    else
+      case eval_list(elements, context) do
+        {:ok, values, final_context} ->
+          {:ok, values, final_context}
+        error -> error
+      end
     end
   end
 
