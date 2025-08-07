@@ -9,7 +9,7 @@ You reason about Rata like you do about tidyverse R, with a bit of python syntax
 - R-like anonymous functions and lambdas: `function (a, b, c) {a + b + c}`, `~ .x + .y`
 - Optional typing: `add1 = function(n: int) { n + 1 }`
 - Recursive modules: `library datetime as dt; library datetime.timezone as tz`
-- Wrapped returns. The standard lib wraps most functions in a `foo!` variant with Tuple return value. Containing a Symbol and a corresponding value.
+- Wrapped returns. The standard lib wraps most functions in a `foo!` variant with List return value. Containing a Symbol and a corresponding value.
 - Elixir-like pattern matching: 
 ```
 case File.read_csv!("data.csv") {

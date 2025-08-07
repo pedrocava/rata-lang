@@ -6,8 +6,8 @@
 - [ ] Stat: Basic statistic functions e.g. mean, sd, rnorm, runif, rdunif, etc
 - [ ] Table: All logic surrounding columnar data. Much of the same API as dplyr. At implementation level, it's basically a wrapper around Elixir's explorer.
 - [ ] Maps: ditto for Maps.
-- [ ] List: Lists are ordered collections of values of possibly different types in Rata, more or less equivalent to R lists and Elixir tuples.
-- [ ] Vector: Vectors are ordered collections of values of the same type in Rata. Rata has no scalars, all values are simply 1-length Vectors.
+- [ ] List: Lists are ordered collections of values of possibly different types in Rata, using `{1, :two, "three"}` syntax. More or less equivalent to R lists and Elixir tuples.
+- [ ] Vector: Vectors are ordered collections of values of the same type in Rata, using `[1, 2, 3]` syntax. Rata has no scalars, all values are simply 1-length Vectors.
 - [x] Set: Immutable set data structure with standard set operations (union, intersection, difference, membership testing, etc.)
 - [ ] Enum: Generics for Lists and Vectors. The basic functional programming toolkit for iterating over a sequence of stuff. Map, Reduce, Keep, Discard, Every, Some, None.
 - [ ] File: File system abstractions. Including reading and writing to files.

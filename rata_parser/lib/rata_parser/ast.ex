@@ -95,7 +95,7 @@ defmodule RataParser.AST do
   end
 
   defmodule Tuple do
-    @moduledoc "Represents tuple literals: {1, 2, 3}, {:ok, value}"
+    @moduledoc "Represents list literals: {1, :two, "three"}, {:ok, value}"
     defstruct [:elements]
     @type t :: %__MODULE__{elements: [Expression.t()]}
   end
@@ -107,7 +107,7 @@ defmodule RataParser.AST do
   end
 
   defmodule Vector do
-    @moduledoc "Represents vector/list literals: [1, 2, 3]"
+    @moduledoc "Represents vector literals (homogeneous): [1, 2, 3], [:ok, :error]"
     defstruct [:elements]
     @type t :: %__MODULE__{elements: [Expression.t()]}
   end
@@ -206,7 +206,7 @@ defmodule RataParser.AST do
 
   # Pattern types for pattern matching
   defmodule TuplePattern do
-    @moduledoc "Represents tuple patterns in case expressions: {:ok, value}"
+    @moduledoc "Represents list patterns in case expressions: {:ok, value}"
     defstruct [:elements]
     @type t :: %__MODULE__{elements: [Pattern.t()]}
   end

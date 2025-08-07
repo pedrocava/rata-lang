@@ -305,7 +305,7 @@ defmodule MapsTest do
   end
 
   describe "Maps.to_list/1" do
-    test "converts map to list of key-value tuples" do
+    test "converts map to list of key-value lists" do
       map = %{a: 1, b: 2}
       {:ok, list} = Maps.to_list(map)
       assert Enum.sort(list) == [{:a, 1}, {:b, 2}]
@@ -335,7 +335,7 @@ defmodule MapsTest do
   end
 
   describe "Maps.from_list/1" do
-    test "creates map from list of key-value tuples" do
+    test "creates map from list of key-value lists" do
       list = [{:a, 1}, {:b, 2}, {:c, 3}]
       assert Maps.from_list(list) == {:ok, %{a: 1, b: 2, c: 3}}
     end
@@ -344,7 +344,7 @@ defmodule MapsTest do
       assert Maps.from_list([]) == {:ok, %{}}
     end
 
-    test "creates single entry map from single tuple list" do
+    test "creates single entry map from single list list" do
       list = [{:only, "entry"}]
       assert Maps.from_list(list) == {:ok, %{only: "entry"}}
     end
@@ -365,25 +365,25 @@ defmodule MapsTest do
       assert Maps.from_list(%{key: "value"}) == {:error, "Maps.from_list requires a list as argument, got %{key: \"value\"}"}
     end
 
-    test "accepts both atom and string keys in tuples" do
+    test "accepts both atom and string keys in lists" do
       # Mixed atom and string keys
       list = [{:atom_key, "atom_value"}, {"string_key", "string_value"}]
       expected = %{atom_key: "atom_value", string_key: "string_value"}
       assert Maps.from_list(list) == {:ok, expected}
     end
 
-    test "returns error for invalid tuple format" do
-      # Non-tuple elements
-      list = [{:valid, "tuple"}, "invalid element"]
-      assert Maps.from_list(list) == {:error, "Maps.from_list requires a list of tuples with atom or string keys, got invalid format in [{:valid, \"tuple\"}, \"invalid element\"]"}
+    test "returns error for invalid list format" do
+      # Non-list elements
+      list = [{:valid, "list"}, "invalid element"]
+      assert Maps.from_list(list) == {:error, "Maps.from_list requires a list of lists with atom or string keys, got invalid format in [{:valid, \"list\"}, \"invalid element\"]"}
       
       # Tuple with invalid key type
       list = [{123, "value"}]
-      assert Maps.from_list(list) == {:error, "Maps.from_list requires a list of tuples with atom or string keys, got invalid format in [{123, \"value\"}]"}
+      assert Maps.from_list(list) == {:error, "Maps.from_list requires a list of lists with atom or string keys, got invalid format in [{123, \"value\"}]"}
       
       # Tuples with wrong arity
       list = [{:key}]
-      assert Maps.from_list(list) == {:error, "Maps.from_list requires a list of tuples with atom or string keys, got invalid format in [key: {}]"}
+      assert Maps.from_list(list) == {:error, "Maps.from_list requires a list of lists with atom or string keys, got invalid format in [key: {}]"}
     end
   end
 end

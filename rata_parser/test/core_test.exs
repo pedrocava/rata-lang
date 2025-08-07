@@ -52,7 +52,7 @@ defmodule CoreTest do
       assert Core.typeof("hello") == {:ok, :string}
       assert Core.typeof(:atom) == {:ok, :symbol}
       assert Core.typeof([1, 2, 3]) == {:ok, :vector}
-      assert Core.typeof({:ok, "value"}) == {:ok, :tuple}
+      assert Core.typeof({:ok, "value"}) == {:ok, :list}
       assert Core.typeof(%{key: "value"}) == {:ok, :map}
       assert Core.typeof(MapSet.new([1, 2, 3])) == {:ok, :set}
       assert Core.typeof(1..10) == {:ok, :range}
@@ -246,13 +246,13 @@ defmodule CoreTest do
       assert Core.is_symbol(42) == {:ok, false}
     end
 
-    test "is_tuple/1" do
-      assert Core.is_tuple({:ok, "value"}) == {:ok, true}
-      assert Core.is_tuple({1, 2, 3}) == {:ok, true}
-      assert Core.is_tuple({}) == {:ok, true}
-      assert Core.is_tuple([1, 2, 3]) == {:ok, false}
-      assert Core.is_tuple(%{key: "value"}) == {:ok, false}
-      assert Core.is_tuple("string") == {:ok, false}
+    test "is_list/1" do
+      assert Core.is_list({:ok, "value"}) == {:ok, true}
+      assert Core.is_list({1, 2, 3}) == {:ok, true}
+      assert Core.is_list({}) == {:ok, true}
+      assert Core.is_list([1, 2, 3]) == {:ok, false}
+      assert Core.is_list(%{key: "value"}) == {:ok, false}
+      assert Core.is_list("string") == {:ok, false}
     end
 
     test "is_set/1" do

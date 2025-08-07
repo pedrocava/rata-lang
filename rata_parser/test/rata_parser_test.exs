@@ -56,7 +56,7 @@ defmodule RataParserTest do
                Lexer.tokenize(":info_123")
     end
 
-    test "tokenizes tuple delimiters" do
+    test "tokenizes list delimiters" do
       assert {:ok, [:left_brace, :right_brace], "", %{}, {1, 0}, 2} = 
                Lexer.tokenize("{}")
     end
@@ -234,7 +234,7 @@ defmodule RataParserTest do
       } = assignment
     end
 
-    test "parses empty tuples" do
+    test "parses empty lists" do
       tokens = [
         :module, {:identifier, "Test"}, :left_brace,
         {:identifier, "empty"}, :assign, :left_brace, :right_brace,
@@ -249,7 +249,7 @@ defmodule RataParserTest do
       } = assignment
     end
 
-    test "parses tuples with elements" do
+    test "parses lists with elements" do
       tokens = [
         :module, {:identifier, "Test"}, :left_brace,
         {:identifier, "result"}, :assign, :left_brace, {:symbol, "ok"}, :comma, {:integer, 42}, :right_brace,
@@ -269,7 +269,7 @@ defmodule RataParserTest do
       } = assignment
     end
 
-    test "parses nested tuples" do
+    test "parses nested lists" do
       tokens = [
         :module, {:identifier, "Test"}, :left_brace,
         {:identifier, "nested"}, :assign, :left_brace, {:symbol, "ok"}, :comma, 
@@ -387,7 +387,7 @@ defmodule RataParserTest do
       } = ast
     end
 
-    test "end-to-end parsing with symbols and tuples" do
+    test "end-to-end parsing with symbols and lists" do
       source = """
       module Test {
         status = :ok
@@ -409,7 +409,7 @@ defmodule RataParserTest do
       } = ast
     end
 
-    test "parses tuples in function calls" do
+    test "parses lists in function calls" do
       source = """
       module Test {
         result = process({:ok, data})
