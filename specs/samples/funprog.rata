@@ -10,5 +10,3 @@ assert Enum.reduce(numbers, ~ .x + .y) == 55
 
 Enum.keep(numbers, is_even) # returns 2, 4, 6, 8, 10
 Enum.every(numbers, is_even) # FALSE
-
-
