@@ -15,10 +15,22 @@ defmodule RataModules.Core do
   Throws an error if the condition is false or falsy.
   """
   def assert(condition) do
-    if is_truthy(condition) do
+    if is_truthy_helper(condition) do
       {:ok, condition}
     else
       {:error, "assertion failed: condition was falsy"}
+    end
+  end
+
+  @doc """
+  Assert function with custom message.
+  Throws an error with the provided message if condition is falsy.
+  """
+  def assert(condition, message) do
+    if is_truthy_helper(condition) do
+      {:ok, condition}
+    else
+      {:error, "assertion failed: #{message}"}
     end
   end
 
@@ -133,11 +145,108 @@ defmodule RataModules.Core do
   def is_exception(%{exception: _}), do: {:ok, true}
   def is_exception(_), do: {:ok, false}
 
+  # Type predicate functions
+  @doc """
+  Check if a value is a list.
+  """
+  def is_list(value) when is_list(value), do: {:ok, true}
+  def is_list(_), do: {:ok, false}
+
+  @doc """
+  Check if a value is a vector (same as list in Rata).
+  """
+  def is_vector(value) when is_list(value), do: {:ok, true}
+  def is_vector(_), do: {:ok, false}
+
+  @doc """
+  Check if a value is a map.
+  """
+  def is_map(value) when is_map(value) and not is_struct(value), do: {:ok, true}
+  def is_map(_), do: {:ok, false}
+
+  @doc """
+  Check if a value is a table (Explorer DataFrame).
+  """
+  def is_table(%Explorer.DataFrame{}), do: {:ok, true}
+  def is_table(_), do: {:ok, false}
+
+  @doc """
+  Check if a value is a boolean.
+  """
+  def is_boolean(value) when is_boolean(value), do: {:ok, true}
+  def is_boolean(_), do: {:ok, false}
+
+  @doc """
+  Check if a value is an integer.
+  """
+  def is_integer(value) when is_integer(value), do: {:ok, true}
+  def is_integer(_), do: {:ok, false}
+
+  @doc """
+  Check if a value is a float.
+  """
+  def is_float(value) when is_float(value), do: {:ok, true}
+  def is_float(_), do: {:ok, false}
+
+  @doc """
+  Check if a value is a number (integer or float).
+  """
+  def is_number(value) when is_number(value), do: {:ok, true}
+  def is_number(_), do: {:ok, false}
+
+  @doc """
+  Check if a value is a string.
+  """
+  def is_string(value) when is_binary(value), do: {:ok, true}
+  def is_string(_), do: {:ok, false}
+
+  @doc """
+  Check if a value is a symbol (atom).
+  """
+  def is_symbol(value) when is_atom(value), do: {:ok, true}
+  def is_symbol(_), do: {:ok, false}
+
+  @doc """
+  Check if a value is a tuple.
+  """
+  def is_tuple(value) when is_tuple(value), do: {:ok, true}
+  def is_tuple(_), do: {:ok, false}
+
+  @doc """
+  Check if a value is a set.
+  """
+  def is_set(%MapSet{}), do: {:ok, true}
+  def is_set(_), do: {:ok, false}
+
+  @doc """
+  Check if a value is a range.
+  """
+  def is_range(%Range{}), do: {:ok, true}
+  def is_range(_), do: {:ok, false}
+
+  @doc """
+  Check if a value is nil.
+  """
+  def is_nil(nil), do: {:ok, true}
+  def is_nil(_), do: {:ok, false}
+
+  @doc """
+  Check if a value is a function.
+  """
+  def is_function(value) when is_function(value), do: {:ok, true}
+  def is_function(_), do: {:ok, false}
+
+  @doc """
+  Check if a value is truthy according to Rata's truthiness rules.
+  Public version of the truthiness evaluation.
+  """
+  def is_truthy(value), do: {:ok, is_truthy_helper(value)}
+
   # Helper function to determine truthiness (same as evaluator)
-  defp is_truthy(nil), do: false
-  defp is_truthy(false), do: false
-  defp is_truthy(0), do: false
-  defp is_truthy(0.0), do: false
-  defp is_truthy(""), do: false
-  defp is_truthy(_), do: true
+  defp is_truthy_helper(nil), do: false
+  defp is_truthy_helper(false), do: false
+  defp is_truthy_helper(0), do: false
+  defp is_truthy_helper(0.0), do: false
+  defp is_truthy_helper(""), do: false
+  defp is_truthy_helper(_), do: true
 end

@@ -281,11 +281,18 @@ defmodule RataRepl.Evaluator do
       {:ok, exception, new_context} ->
         case message_ast do
           nil ->
-            {:error, %{exception: exception, message: nil}}
+            # If exception is already a properly formed exception, use it as-is
+            case exception do
+              %{exception: _, message: _} -> {:error, exception}
+              _ -> {:error, %{exception: exception, message: nil}}
+            end
           message_expr ->
             case eval(message_expr, new_context) do
-              {:ok, message, final_context} ->
-                {:error, %{exception: exception, message: message}}
+              {:ok, message, _final_context} ->
+                case exception do
+                  %{exception: type} -> {:error, %{exception: type, message: message}}
+                  _ -> {:error, %{exception: exception, message: message}}
+                end
               error -> error
             end
         end
