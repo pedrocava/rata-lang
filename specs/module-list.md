@@ -1,15 +1,13 @@
 # Modules to be exposed in the Standard Lib.
 
-Preferably most of this is implemented in Rata itself.
-
 - [ ] Core: Basic functionalities of the language.
 - [ ] Module: The code surrounding Module definition. 
 - [ ] Math: Basic arithmetic and mathemetical functions e.g. +, -, /, power, square, cube, factorial, exponential, log, etc.
 - [ ] Stat: Basic statistic functions e.g. mean, sd, rnorm, runif, rdunif, etc
 - [ ] Table: All logic surrounding columnar data. Much of the same API as dplyr. At implementation level, it's basically a wrapper around Elixir's explorer.
 - [ ] Maps: ditto for Maps.
-- [ ] List: Self-explanatory
-- [ ] Vector: You guessed it
+- [ ] List: Lists are ordered collections of values of possibly different types in Rata, more or less equivalent to R lists and Elixir tuples.
+- [ ] Vector: Vectors are ordered collections of values of the same type in Rata. Rata has no scalars, all values are simply 1-length Vectors.
 - [x] Set: Immutable set data structure with standard set operations (union, intersection, difference, membership testing, etc.)
 - [ ] Enum: Generics for Lists and Vectors. The basic functional programming toolkit for iterating over a sequence of stuff. Map, Reduce, Keep, Discard, Every, Some, None.
 - [ ] File: File system abstractions. Including reading and writing to files.
@@ -22,5 +20,4 @@ Preferably most of this is implemented in Rata itself.
 - [ ] Struct: Wrapper around Elixir's Struct functionality.
 - [ ] Dabber: A wrapper around Ecto. Exposes 4 submodules: Repo, Schema, Query, Changeset.
 - [ ] Log: A logging toolkit.
-
- 
+- [ ] Types: Static typing utils.

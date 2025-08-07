@@ -4,8 +4,8 @@ You reason about Rata like you do about tidyverse R, with a bit of python syntax
 
 ## Features
 
-- Data types should be familiar: ints, floats, booleans, strings, sequences, tuples, and symbols.
-- Data structtures too: Vectors, Lists, Maps, Tables
+- Data types should be familiar: ints, floats, booleans, strings, and symbols.
+- Data structtures too: Vectors, Lists, Maps, Tables, Sets
 - R-like anonymous functions and lambdas: `function (a, b, c) {a + b + c}`, `~ .x + .y`
 - Optional typing: `add1 = function(n: int) { n + 1 }`
 - Recursive modules: `library datetime as dt; library datetime.timezone as tz`
@@ -23,6 +23,3 @@ Dataloader.read_csv("data.csv") # returns Table, raises exception if no such fil
 - 1-indexed.
 - No scalars. Every "scalar" value is simply a single entry vector.
 - Immutable by default. The standard lib avoids side-effects by design. Idiomatic rata-code has no mutations.
-
-
-
