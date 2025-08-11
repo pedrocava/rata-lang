@@ -7,7 +7,8 @@ defmodule RataParser.MixProject do
       version: "0.1.0",
       elixir: "~> 1.15",
       start_permanent: Mix.env() == :prod,
-      deps: deps()
+      deps: deps(),
+      escript: [main_module: Rata]
     ]
   end
 
@@ -20,7 +21,8 @@ defmodule RataParser.MixProject do
   defp deps do
     [
       {:nimble_parsec, "~> 1.4"},
-      {:explorer, "~> 0.8"}
+      {:explorer, "~> 0.8"},
+      {:ex_cli, "~> 0.1.0"}
     ]
   end
 end
