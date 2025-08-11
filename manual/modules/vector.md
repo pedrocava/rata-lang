@@ -2,21 +2,13 @@
 
 The Vector module provides operations for working with Rata's fundamental data structure - vectors. In Rata, there are no scalar values; everything is a vector, even single values like `42` are actually `[42]`.
 
-## Overview
-
-Vectors are:
-- **1-indexed**: Following R conventions for data work
-- **Homogeneous**: All elements must be of the same type  
-- **Immutable**: Operations return new vectors
-- **Efficient**: Optimized for numerical and data operations
-
-## Import
+## Vector Creation
 
 ```rata
-library Vector as v
+names = ["Alice", "Bob", "Charlie"]
+odds = [1, 3, 5, 7]
+syms = [:ok, :fine, :gotcha, :nope]
 ```
-
-## Vector Creation
 
 ### `new(elements)`
 Creates a new vector from a list of elements.
@@ -24,7 +16,7 @@ Creates a new vector from a list of elements.
 ```rata
 numbers = Vector.new(1, 2, 3, 4, 5)
 names = Vector.new("Alice", "Bob", "Charlie")
-names = ["Alice", "Bob", "Charlie"]
+
 ```
 
 ### `range(start, stop, step \\ 1)`
