@@ -42,7 +42,7 @@ library Set as s
 
 ```rata
 # Tag management
-user_tags = Set.new([:engineer, :python, :data_science])
+user_tags = Set.new(:engineer, :python, :data_science)
 required_tags = #{:python, :sql}
 
 has_required = Set.subset?(required_tags, user_tags)  # true
