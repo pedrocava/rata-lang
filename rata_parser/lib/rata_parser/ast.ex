@@ -3,11 +3,18 @@ defmodule RataParser.AST do
   Abstract Syntax Tree node definitions for the Rata language.
   """
 
+  # Documentation node
+  defmodule Docstring do
+    @moduledoc "Represents docstring literals: \"\"\"documentation\"\"\""
+    defstruct [:content, :metadata]
+    @type t :: %__MODULE__{content: String.t(), metadata: map()}
+  end
+
   # Top-level nodes
   defmodule Module do
     @moduledoc "Represents a module declaration: module Name { ... }"
-    defstruct [:name, :body, imports: []]
-    @type t :: %__MODULE__{name: String.t(), body: [Statement.t()], imports: [LibraryImport.t()]}
+    defstruct [:name, :body, :docstring, imports: []]
+    @type t :: %__MODULE__{name: String.t(), body: [Statement.t()], docstring: Docstring.t() | nil, imports: [LibraryImport.t()]}
   end
 
   # Statement types
@@ -25,8 +32,8 @@ defmodule RataParser.AST do
 
   defmodule FunctionDef do
     @moduledoc "Represents function definition: name = function params { body }"
-    defstruct [:name, :params, :body]
-    @type t :: %__MODULE__{name: String.t(), params: [Parameter.t()], body: [Statement.t()]}
+    defstruct [:name, :params, :body, :docstring]
+    @type t :: %__MODULE__{name: String.t(), params: [Parameter.t()], body: [Statement.t()], docstring: Docstring.t() | nil}
   end
 
   defmodule Return do
@@ -247,6 +254,7 @@ defmodule RataParser.AST do
   @type Expression ::
           Literal.t()
           | InterpolatedString.t()
+          | Docstring.t()
           | Symbol.t()
           | Tuple.t()
           | Set.t()

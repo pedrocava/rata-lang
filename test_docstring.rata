@@ -1,0 +1,25 @@
+module TestModule {
+  """
+  This is a module docstring.
+  It can span multiple lines and contains
+  documentation about what this module does.
+  """
+
+  add = function(a, b) {
+    """
+    Adds two numbers together.
+    
+    Args:
+      a: First number
+      b: Second number
+    
+    Returns:
+      Sum of a and b
+    """
+    a + b
+  }
+
+  multiply = function(x, y) {
+    x * y
+  }
+}

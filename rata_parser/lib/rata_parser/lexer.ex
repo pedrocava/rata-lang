@@ -102,6 +102,25 @@ defmodule RataParser.Lexer do
     |> reduce({__MODULE__, :to_float, []})
     |> unwrap_and_tag(:float)
 
+  # Docstrings (triple-quoted strings) - must come before regular strings
+  docstring = 
+    ignore(string("\"\"\""))
+    |> repeat(
+      choice([
+        string("\\\"") |> replace(?"),
+        string("\\\\") |> replace(?\\),
+        string("\\n") |> replace(?\n),
+        string("\\t") |> replace(?\t),
+        string("\\r") |> replace(?\r),
+        # Allow any character except the ending triple quote sequence
+        lookahead_not(string("\"\"\""))
+        |> utf8_char([])
+      ])
+    )
+    |> ignore(string("\"\"\""))
+    |> reduce({__MODULE__, :to_docstring, []})
+    |> unwrap_and_tag(:docstring)
+
   # Strings
   string_literal = 
     ignore(string("\""))
@@ -167,6 +186,7 @@ defmodule RataParser.Lexer do
   # Token definitions in order of precedence
   token = 
     choice([
+      docstring,
       f_string,
       string_literal,
       float,
@@ -223,5 +243,14 @@ defmodule RataParser.Lexer do
   def to_f_string(parts) do
     parts
     |> Enum.join("")
+  end
+
+  def to_docstring(chars) do
+    content = chars
+    |> List.to_string()
+    |> String.trim()
+    
+    # Return structured docstring data
+    %{content: content, type: :docstring}
   end
 end

@@ -24,21 +24,29 @@ defmodule RataParser.Parser do
     |> wrap()
     |> map({__MODULE__, :build_library_import, []})
 
-  # Module parsing with optional imports: [imports] module Name { statements }
+  # Optional docstring parser
+  optional_docstring = 
+    optional(
+      unwrap_and_tag(tag(:docstring), :docstring)
+    )
+
+  # Module parsing with optional imports: [imports] module Name { docstring? statements }
   module_with_imports = 
     repeat(library_import_statement)
     |> ignore(tag(:module))
     |> unwrap_and_tag(tag(:identifier), :name)
     |> ignore(tag(:left_brace))
+    |> optional_docstring
     |> repeat(parsec(:statement))
     |> ignore(tag(:right_brace))
     |> reduce({__MODULE__, :build_module_with_imports, []})
 
-  # Module parsing: module Name { statements }
+  # Module parsing: module Name { docstring? statements }
   module_declaration = 
     ignore(tag(:module))
     |> unwrap_and_tag(tag(:identifier), :name)
     |> ignore(tag(:left_brace))
+    |> optional_docstring
     |> repeat(parsec(:statement))
     |> ignore(tag(:right_brace))
     |> wrap()
@@ -285,11 +293,12 @@ defmodule RataParser.Parser do
     |> ignore(tag(:right_paren))
     |> reduce({__MODULE__, :build_function_call, []})
 
-  # Function definitions: function params { body }
+  # Function definitions: function params { docstring? body }
   function_definition = 
     ignore(tag(:function))
     |> parsec(:parameter_list)
     |> ignore(tag(:left_brace))
+    |> optional_docstring
     |> repeat(parsec(:statement))
     |> ignore(tag(:right_brace))
     |> wrap()
@@ -493,14 +502,35 @@ defmodule RataParser.Parser do
   end
 
   def build_module([{:name, name} | rest]) do
-    body = rest |> List.flatten()
-    %AST.Module{name: name, body: body}
+    {docstring, body} = extract_docstring_and_body(rest)
+    %AST.Module{name: name, body: body, docstring: docstring}
   end
 
   def build_module_with_imports([imports | rest]) do
     [{:name, name} | body_parts] = rest
-    body = body_parts |> List.flatten()
-    %AST.Module{name: name, body: body, imports: imports}
+    {docstring, body} = extract_docstring_and_body(body_parts)
+    %AST.Module{name: name, body: body, docstring: docstring, imports: imports}
+  end
+
+  # Helper function to extract docstring from parsed content
+  defp extract_docstring_and_body(content) do
+    flat_content = List.flatten(content)
+    
+    case flat_content do
+      [{:docstring, docstring_data} | body] -> 
+        docstring = build_docstring(docstring_data)
+        {docstring, body}
+      body -> 
+        {nil, body}
+    end
+  end
+
+  # Helper function to build docstring AST node
+  defp build_docstring(docstring_data) when is_map(docstring_data) do
+    %AST.Docstring{
+      content: docstring_data.content,
+      metadata: %{type: docstring_data.type}
+    }
   end
 
   def build_assignment([{:name, name}, {:value, value}]) do
@@ -628,8 +658,9 @@ defmodule RataParser.Parser do
     %AST.FunctionCall{function: func, args: List.flatten(args)}
   end
 
-  def build_function([params, body]) do
-    %AST.Function{params: params, body: List.flatten([body])}
+  def build_function([params | content]) do
+    {docstring, body} = extract_docstring_and_body(content)
+    %AST.Function{params: params, body: body, docstring: docstring}
   end
 
   def build_if(args) do
