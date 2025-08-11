@@ -22,8 +22,9 @@ library Vector as v
 Creates a new vector from a list of elements.
 
 ```rata
-numbers = Vector.new([1, 2, 3, 4, 5])
-names = Vector.new(["Alice", "Bob", "Charlie"])
+numbers = Vector.new(1, 2, 3, 4, 5)
+names = Vector.new("Alice", "Bob", "Charlie")
+names = ["Alice", "Bob", "Charlie"]
 ```
 
 ### `range(start, stop, step \\ 1)`
