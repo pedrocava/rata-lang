@@ -18,21 +18,21 @@ This is being vibe coded and takes a lot of inspiration from [T](https://github.
 module BirdCount {
   # Get today's bird count (first element)
   today = function(counts: [int]) {
-    if List.is_empty(counts) {
-      nil
+    if Vector.is_empty(counts) {
+      return nil
     } else {
-      List.first(counts)
+      return Vector.first(counts)
     }
   }
   
   # Increment today's count by 1
   increment_day_count = function(counts: [int]) {
-    if List.is_empty(counts) {
-      [1]
+    if Vector.is_empty(counts) {
+      return 1
     } else {
-      today_count = List.first(counts)
-      rest_counts = List.rest(counts)
-      List.prepend(rest_counts, today_count + 1)
+      today_count = Vector.first(counts)
+      rest_counts = Vector.rest(counts)
+      return Vector.prepend(rest_counts, today_count + 1)
     }
   }
   
@@ -50,7 +50,7 @@ module BirdCount {
   busy_days = function(counts: [int]) {
     counts 
       |> Enum.keep(~ .x >= 5)
-      |> List.length()
+      |> Vector.length()
   }
 }
 ```
@@ -68,7 +68,7 @@ module Math {
   }
   
   # Generate first 10 fibonacci numbers
-  fib_sequence = 1..10 |>
+  first_10_elements_fib_sequence = 1..10 |>
     Enum.map(fibonacci)
 }
 ```
