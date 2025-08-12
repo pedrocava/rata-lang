@@ -17,7 +17,10 @@ This repository contains both the specification and initial implementation for *
 - `rata_parser/` - Elixir implementation of parser and REPL
   - `lib/rata_parser/` - Parser components (lexer, parser, AST)
   - `lib/rata_repl/` - REPL implementation with evaluator
+  - `lib/rata_docs/` - Documentation generation system
+  - `lib/rata_modules/` - Standard library module implementations
   - `test/` - Test suite for parser functionality
+- `manual/` - High-level documentation and guides (Markdown source)
 
 ## Common Commands
 
@@ -36,6 +39,27 @@ mix deps.get
 
 # Run specific test files (DO NOT RUN - RESTRICTED)
 # mix test test/rata_parser_test.exs
+```
+
+### Documentation Commands
+```bash
+# Extract documentation from source code
+rata docs extract
+
+# Generate documentation in all formats (markdown + PDF)
+rata docs generate
+
+# Generate only specific format
+rata docs generate --format markdown
+rata docs generate --format typst
+
+# Browse documentation for a specific module
+rata docs module Math
+rata docs module Vector
+
+# Search across all module documentation
+rata docs search "sqrt"
+rata docs search "filter"
 ```
 
 ### REPL Commands
@@ -58,6 +82,15 @@ The parser is built with NimbleParsec and consists of:
 - **RataRepl** (`rata_repl.ex`) - Main REPL loop with command handling
 - **Evaluator** (`rata_repl/evaluator.ex`) - AST evaluation with variable context
 
+### Documentation System Architecture
+- **RataDocs** (`rata_docs.ex`) - Main coordination module for documentation pipeline
+- **Extractor** (`rata_docs/extractor.ex`) - Extracts `@doc` annotations from Elixir modules
+- **RataParser** (`rata_docs/rata_parser.ex`) - Extracts docstrings from `.rata` source files
+- **Storage** (`rata_docs/storage.ex`) - In-memory storage and querying of extracted docs
+- **Generator** (`rata_docs/generator.ex`) - Generates Markdown and Typst/PDF output
+- **CLI** (`rata_docs/cli.ex`) - Command-line interface for browsing and searching docs
+- **Templates** (`rata_docs/templates/`) - Typst templates for professional PDF generation
+
 ### Parser Capabilities
 Currently supports:
 - Module declarations: `module Name { ... }`
@@ -69,6 +102,7 @@ Currently supports:
 - If expressions: `if condition { then } else { else }`
 - Literals: integers, floats
 - Module references: `__module__`
+- **Docstrings**: Triple-quoted strings `"""documentation"""`
 
 ## Language Design Philosophy
 
@@ -94,6 +128,16 @@ The `specs/ROADMAP.md` file contains a comprehensive 6-phase implementation plan
 5. **Tooling Ecosystem** - Compiler, editors, distribution packages
 6. **Community & Adoption** - Documentation, advanced features, ecosystem growth
 
+## Documentation Philosophy
+
+Rata uses a **dynamic documentation system** that prioritizes:
+- **Single source of truth**: Documentation lives in code as `@doc` annotations and docstrings
+- **Always synchronized**: Generated docs never drift from implementation
+- **Developer experience**: `rata docs` CLI for instant access to module information
+- **Multiple formats**: Markdown for web/GitHub, PDF for distribution, CLI for development
+- **Minimal maintenance**: No manual function lists to update
+- **Professional quality**: Typst templates for publication-ready documentation
+
 ## Development Context
 
 - Implementation leverages Elixir/BEAM but will be written mostly in Rata itself
@@ -102,3 +146,4 @@ The `specs/ROADMAP.md` file contains a comprehensive 6-phase implementation plan
 - Keep data engineering use case central to design decisions
 - Maintain consistency with R's 1-indexing and tidyverse ergonomics
 - Follow the roadmap phases for systematic implementation
+- **Documentation-first**: All new modules should include comprehensive docstrings

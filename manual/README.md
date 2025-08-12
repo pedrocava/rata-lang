@@ -1,6 +1,6 @@
 # Rata Programming Language Documentation
 
-This directory contains the comprehensive documentation system for the Rata programming language, including both the manual content and the tooling to generate professional PDFs and HTML documentation.
+This directory contains the comprehensive documentation system for the Rata programming language. Documentation is now dynamically generated from source code docstrings using Rata's native Elixir-based tooling.
 
 ## 📚 Documentation Structure
 
@@ -12,120 +12,113 @@ This directory contains the comprehensive documentation system for the Rata prog
 - **[contributing.md](contributing.md)** - Development and contribution guidelines
 
 ### Standard Library Reference
-- **[modules/](modules/)** - Complete documentation for all 24+ standard library modules
-- **[modules/index.md](modules/index.md)** - Module overview and quick reference
+- **[modules/](modules/)** - Legacy manual documentation (being replaced by generated docs)
+- **Generated Docs** - Automatically generated from `@doc` annotations in `rata_parser/lib/rata_modules/`
 
 ### Advanced Topics
 - **[advanced/](advanced/)** - Advanced programming patterns and techniques
 - **[examples/](examples/)** - Complete example applications and use cases
 - **[migration/](migration/)** - Migration guides from Python, R, and other languages
 
-## 🔧 Documentation System
+## ⚡ New Documentation System
 
 ### Components
-- **[template.typ](template.typ)** - Professional Typst template for PDF generation
-- **[build.py](build.py)** - Python build script for documentation generation
-- **Docstring integration** - Live documentation extracted from Rata source code
+- **`rata docs` CLI** - Native Elixir tooling for documentation generation
+- **Docstring extraction** - Automatic extraction from Elixir modules and Rata source
+- **Multiple formats** - Markdown, Typst, and PDF generation
+- **Live documentation** - Always synchronized with source code
 
 ### Features
-- ✅ **Markdown source** - Easy-to-edit documentation in Markdown format
-- ✅ **Professional PDFs** - High-quality PDF generation using Typst
-- ✅ **Hyperlinked navigation** - Cross-references between sections and modules
-- ✅ **Syntax highlighting** - Rata code highlighting in examples
-- ✅ **Modular structure** - Organized by topic and module
-- 🚧 **Docstring extraction** - Automatic documentation from source code
-- 📋 **HTML output** - Web-friendly documentation (planned)
+- ✅ **Single source of truth** - Documentation lives in code docstrings
+- ✅ **Always synchronized** - Generated docs never drift from implementation
+- ✅ **Professional PDFs** - High-quality PDF generation using Typst templates
+- ✅ **CLI integration** - Browse and search docs from command line
+- ✅ **Multiple formats** - Markdown for web, PDF for distribution
+- ✅ **Native tooling** - Uses Rata's own Elixir infrastructure
+- ✅ **Git integration** - Auto-regenerates when modules change
 
-## 🚀 Building Documentation
+## 🚀 Using the Documentation System
 
 ### Prerequisites
-- **Python 3.8+** for the build system
-- **[Typst](https://typst.app/)** for PDF generation
+- **Elixir** (already required for Rata development)
+- **[Typst](https://typst.app/)** for PDF generation (optional)
 - **Git** for version control
 
 ### Quick Start
 ```bash
-# Generate PDF documentation
-python build.py --format pdf
+# Navigate to rata_parser directory
+cd rata_parser
 
-# Generate Typst intermediate files
-python build.py --format typst  
+# Extract documentation from all modules
+elixir -e "
+  Mix.start()
+  Code.require_file(\"lib/rata_docs.ex\")
+  Code.require_file(\"lib/rata_docs/storage.ex\")
+  Code.require_file(\"lib/rata_docs/extractor.ex\")
+  Code.require_file(\"lib/rata_docs/generator.ex\")
+  Code.require_file(\"lib/rata_docs/cli.ex\")
+  RataDocs.Extractor.extract_all()
+"
 
-# Generate all formats
-python build.py --format all
+# Generate documentation in all formats
+elixir -e "
+  Mix.start()
+  # ... load modules ...
+  RataDocs.Generator.generate_all(:both)
+"
 
-# Custom output directory
-python build.py --output docs/build
+# Or use the CLI when available
+rata docs extract     # Extract docstrings from source
+rata docs generate    # Generate markdown and PDF docs
+rata docs module Math # Show documentation for Math module
+rata docs search sqrt # Search for functions containing 'sqrt'
 ```
 
 ### Output Files
-- **`build/rata-manual.typ`** - Typst source file
-- **`build/rata-manual.pdf`** - Professional PDF manual
-- **`build/rata-manual.html`** - HTML documentation (planned)
+- **`docs/generated/*.md`** - Markdown documentation for each module
+- **`docs/generated/index.md`** - Module index and overview
+- **`docs/generated/*.pdf`** - PDF documentation (if Typst is available)
 
 ## 📖 Writing Documentation
 
-### Markdown Guidelines
-- Use standard GitHub-flavored Markdown
-- Code blocks should specify language: `\`\`\`rata`
-- Include practical examples in each section
-- Cross-reference other modules and functions
-- Keep explanations concise but comprehensive
+### Docstring Guidelines in Elixir Modules
+Add documentation directly to your Elixir module implementations:
 
-### Rata Code Examples
-```rata
-# Use descriptive examples
-library Table as t
-library Math as m
-
-# Show real-world usage patterns
-users = t.from_map({
-  name: ["Alice", "Bob", "Charlie"],
-  age: [25, 30, 35]
-})
-
-adults = users |> t.filter(age >= 18)
-avg_age = adults.age |> m.mean()
+```elixir
+defmodule RataModules.YourModule do
+  @moduledoc """
+  Brief description of what this module does.
+  
+  Longer explanation with examples and design philosophy.
+  Supports standard markdown formatting.
+  """
+  
+  @doc """
+  Function description with clear purpose.
+  
+  Explains parameters, return values, and provides examples.
+  Use markdown for formatting - code blocks, lists, etc.
+  """
+  def your_function(param1, param2) do
+    # Implementation
+  end
+end
 ```
 
-### Adding New Modules
-1. Create `modules/your-module.md`
-2. Follow the template from existing modules
-3. Add to the build order in `build.py`
-4. Update `modules/index.md` with the new module
-
-## 🎨 Customization
-
-### Typst Template
-The `template.typ` file controls the visual appearance:
-- Colors: Rata blue theme (`#2563eb`)
-- Typography: Source Sans Pro / Liberation Sans
-- Layout: A4 paper, professional margins
-- Components: Title page, TOC, headers, code blocks
-
-### Build System
-The `build.py` script can be extended to:
-- Add new output formats
-- Integrate with CI/CD pipelines
-- Extract documentation from source code
-- Generate cross-references and indexes
-
-## 🔄 Integration with Language
-
-### Docstring Support
-Rata supports triple-quoted docstrings:
+### Docstring Guidelines in Rata Source
+When writing `.rata` files, use triple-quoted docstrings:
 
 ```rata
 module DataProcessor {
-  \"\"\"
+  """
   Data processing utilities for ETL pipelines.
   
   This module provides functions for loading, transforming,
   and validating data from various sources.
-  \"\"\"
+  """
   
   process_csv = function(filename: string) {
-    \"\"\"
+    """
     Processes a CSV file with data validation.
     
     Args:
@@ -133,28 +126,68 @@ module DataProcessor {
     
     Returns:
       Processed data as Table
-    \"\"\"
+    """
     # Implementation here
   }
 }
 ```
 
-### REPL Integration
-```rata
-# Access documentation in REPL
-:doc Math.sqrt        # Show function documentation
-:help Table           # Show module overview
-```
+### Adding New Modules
+1. **Elixir modules**: Add to `rata_parser/lib/rata_modules/your_module.ex`
+2. **Follow existing patterns**: Look at `math.ex` or `core.ex` for structure
+3. **Include @moduledoc**: Describe the module's purpose and key concepts
+4. **Document all public functions**: Use @doc with examples
+5. **Regenerate docs**: Run `rata docs generate` to update all documentation
 
-## 📋 TODO
+## 🎨 Customization
 
-- [ ] Implement HTML output generation
-- [ ] Add docstring extraction from source code
-- [ ] Create automated cross-reference generation
-- [ ] Add search functionality to HTML docs
-- [ ] Integrate with GitHub Pages deployment
-- [ ] Add multi-language support
-- [ ] Create interactive code examples
+### Typst Templates
+Templates are located in `rata_parser/lib/rata_docs/templates/`:
+- **`module.typ`** - Individual module documentation
+- **`all_modules.typ`** - Combined documentation for all modules  
+- **`manual.typ`** - Full manual template (archived from legacy system)
+
+Customize the visual appearance:
+- Colors: Rata blue theme (`#2563eb`)
+- Typography: Inter / Source Sans Pro / Liberation Sans
+- Layout: A4 paper, professional margins
+- Components: Title page, tables, code blocks
+
+### Generator System
+The `RataDocs.Generator` module can be extended to:
+- Add new output formats
+- Integrate with CI/CD pipelines
+- Generate cross-references and indexes
+- Customize Typst compilation options
+
+## 🔄 Integration with Language
+
+### Automatic Documentation
+- **Git hooks**: Documentation regenerates when modules change
+- **CLI integration**: Browse docs without leaving terminal
+- **REPL integration**: Planned `:doc` and `:help` commands
+- **IDE support**: Language servers can provide inline documentation
+
+### Migration from Manual Docs
+The legacy `manual/modules/*.md` files contain valuable content that should be:
+1. **Migrated to docstrings** in the corresponding Elixir modules
+2. **Enhanced with examples** and better formatting
+3. **Kept minimal** - focus on function signatures and core concepts
+4. **Replaced gradually** as the generated docs improve
+
+## 🚀 Development Workflow
+
+### For Module Authors
+1. Write comprehensive `@doc` annotations in your Elixir modules
+2. Include examples, parameter descriptions, return values
+3. Test your documentation: `rata docs module YourModule`
+4. The docs will auto-regenerate when you commit changes
+
+### For Contributors
+1. Focus on improving docstrings rather than manual `.md` files
+2. Use the CLI to browse and search existing documentation  
+3. Verify generated docs look good in both Markdown and PDF formats
+4. Consider adding examples to the `specs/samples/` directory
 
 ## 🤝 Contributing
 
@@ -166,4 +199,4 @@ See the main [Contributing Guide](contributing.md) for details on:
 
 ---
 
-*This documentation system is designed to grow with the Rata language, providing comprehensive, professional documentation that serves both beginners and advanced users.*
+*The Rata documentation system leverages the language's own infrastructure to provide always-current, comprehensive documentation that grows with the codebase.*
