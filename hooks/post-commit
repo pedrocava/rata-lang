@@ -1,0 +1,49 @@
+#!/bin/bash
+# Post-commit hook to regenerate documentation when module files change
+
+# Check if any Rata module files were changed in the last commit
+changed_files=$(git diff-tree --no-commit-id --name-only -r HEAD)
+
+# Check for changes in Elixir modules or Rata source files
+if echo "$changed_files" | grep -E "(rata_parser/lib/rata_modules/.*\.ex|specs/samples/.*\.rata|.*\.rata)$" > /dev/null; then
+    echo "Module files changed, regenerating documentation..."
+    
+    cd rata_parser
+    
+    # Try to regenerate docs - don't fail the commit if this fails
+    if command -v elixir > /dev/null 2>&1; then
+        if elixir -e "
+          Mix.start()
+          Mix.Task.run(\"deps.get\")
+          
+          # Load the project
+          Code.eval_file(\"mix.exs\")
+          Mix.Project.get!
+          
+          # Start the application dependencies
+          Application.ensure_all_started(:nimble_parsec)
+          
+          # Load our modules
+          Code.require_file(\"lib/rata_docs.ex\")
+          Code.require_file(\"lib/rata_docs/storage.ex\")
+          Code.require_file(\"lib/rata_docs/extractor.ex\")
+          Code.require_file(\"lib/rata_docs/generator.ex\")
+          Code.require_file(\"lib/rata_docs/cli.ex\")
+          Code.require_file(\"lib/rata_docs/rata_parser.ex\")
+          
+          # Run the documentation build
+          case RataDocs.build_all(:markdown) do
+            :ok -> IO.puts(\"Documentation updated successfully\")
+            {:error, reason} -> IO.puts(\"Documentation update failed: #{reason}\")
+          end
+        " 2>/dev/null; then
+            echo "Documentation regenerated successfully"
+        else
+            echo "Failed to regenerate documentation (this won't prevent the commit)"
+        fi
+    else
+        echo "Elixir not found - skipping documentation regeneration"
+    fi
+    
+    cd ..
+fi
