@@ -908,4 +908,16 @@ defmodule RataModules.Datetime do
   def force_tz!(datetime, timezone) do
     {:error, "Datetime.force_tz! requires a NaiveDateTime and timezone string, got #{inspect(datetime)} and #{inspect(timezone)}"}
   end
+
+  # Alias functions following the convention: predicate functions get is_ aliases
+  
+  @doc """
+  Alias for leap_year/1. Check if a year is a leap year.
+  """
+  def is_leap_year(year), do: leap_year(year)
+
+  @doc """
+  Alias for leap_year!/1. Check if a year is a leap year (wrapped version).
+  """
+  def is_leap_year!(year), do: leap_year!(year)
 end

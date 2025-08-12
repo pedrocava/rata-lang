@@ -260,4 +260,31 @@ defmodule RataModules.Set do
   def first(_) do
     {:error, "Set.first/1 requires a set as argument"}
   end
+
+  # Alias functions following the convention: predicate? functions get is_ aliases
+  
+  @doc """
+  Alias for member?/2. Check if an element is a member of the set.
+  """
+  def is_member(set, element), do: member?(set, element)
+
+  @doc """
+  Alias for subset?/2. Check if the first set is a subset of the second set.
+  """
+  def is_subset(set1, set2), do: subset?(set1, set2)
+
+  @doc """
+  Alias for disjoint?/2. Check if two sets have no elements in common.
+  """
+  def is_disjoint(set1, set2), do: disjoint?(set1, set2)
+
+  @doc """
+  Alias for equal?/2. Check if two sets are equal.
+  """
+  def is_equal(set1, set2), do: equal?(set1, set2)
+
+  @doc """
+  Alias for empty?/1. Check if the set is empty.
+  """
+  def is_empty(set), do: empty?(set)
 end
