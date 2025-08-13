@@ -236,7 +236,7 @@ adults = data
 
 ### If Expressions
 ```rata
-# If expression (returns a value)
+# If expression returns a value
 result = if age >= 18 {
   "adult"
 } else {
