@@ -34,4 +34,4 @@ Welcome to the comprehensive manual for the Rata programming language - a data e
 
 ---
 
-*This manual is generated from the Rata source code and specifications. For the most up-to-date information, see the [Rata GitHub repository](https://github.com/your-org/rata-lang).*
+*This manual is generated from the Rata source code and specifications. For the most up-to-date information, see the [Rata GitHub repository](https://github.com/pedrocava/rata-lang).*
