@@ -26,8 +26,8 @@ defmodule RataModules.File do
 
       # Wrapped version (safe error handling)
       case File.file_create!("/tmp/example.txt") do
-        {:ok, path} -> Log.info("Created: #{path}")
-        {:error, message} -> Log.error("Failed: #{message}")
+        {:ok, path} -> Log.info("Created: \#{path}")
+        {:error, message} -> Log.error("Failed: \#{message}")
       end
   """
 

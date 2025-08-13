@@ -21,7 +21,7 @@ defmodule RataModules.Json do
   
   Functions ending in `?` also have an `is_` prefixed alias:
   - `valid?/1` and `is_valid/1` - Check if string is valid JSON
-  - `valid?!/1` and `is_valid!/1` - Wrapped versions
+  - `valid!/1` and `is_valid!/1` - Wrapped versions
   
   ## Examples
   
@@ -40,7 +40,7 @@ defmodule RataModules.Json do
       # Wrapped versions for error handling
       case Json.parse!(json_string) do
         {:ok, data} -> process_data(data)
-        {:error, message} -> Log.error("JSON parse failed: #{message}")
+        {:error, message} -> Log.error("JSON parse failed: \#{message}")
       end
   """
 
@@ -409,16 +409,16 @@ defmodule RataModules.Json do
   
   ## Examples
   
-      iex> Json.valid?!(~s|{"name": "Alice"}|)
+      iex> Json.valid!(~s|{"name": "Alice"}|)
       {:ok, true}
       
-      iex> Json.valid?!(~s|{invalid json}|)
+      iex> Json.valid!(~s|{invalid json}|)
       {:ok, false}
       
-      iex> Json.valid?!([~s|{"valid": true}|, ~s|{invalid}|])
+      iex> Json.valid!([~s|{"valid": true}|, ~s|{invalid}|])
       {:ok, [true, false]}
   """
-  def valid?!(json_string) when is_binary(json_string) do
+  def valid!(json_string) when is_binary(json_string) do
     result = case Jason.decode(json_string) do
       {:ok, _} -> true
       {:error, _} -> false
@@ -426,7 +426,7 @@ defmodule RataModules.Json do
     {:ok, result}
   end
 
-  def valid?!(json_strings) when is_list(json_strings) do
+  def valid!(json_strings) when is_list(json_strings) do
     results = Enum.map(json_strings, fn json_string ->
       case Jason.decode(json_string) do
         {:ok, _} -> true
@@ -436,12 +436,12 @@ defmodule RataModules.Json do
     {:ok, results}
   end
 
-  def valid?!(invalid) do
-    {:error, "Json.valid?! requires a string or list of strings, got #{inspect(invalid)}"}
+  def valid!(invalid) do
+    {:error, "Json.valid! requires a string or list of strings, got #{inspect(invalid)}"}
   end
 
   @doc """
-  Alias for valid?!/1 - Check if a string contains valid JSON (wrapped version).
+  Alias for valid!/1 - Check if a string contains valid JSON (wrapped version).
   
   ## Examples
   
@@ -449,6 +449,6 @@ defmodule RataModules.Json do
       {:ok, true}
   """
   def is_valid!(json_string_or_list) do
-    valid?!(json_string_or_list)
+    valid!(json_string_or_list)
   end
 end

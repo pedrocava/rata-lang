@@ -39,47 +39,39 @@ defmodule RataCli do
     end
   end
   
-  command :docs do
-    description "Documentation tools for Rata modules"
-    long_description """
-    Generate and manage documentation for Rata standard library modules.
-    Extract docstrings from source code and generate clean, minimal documentation.
-    """
+  command :docs_extract do
+    description "Extract docstrings from Elixir module implementations"
     
-    command :extract do
-      description "Extract docstrings from Elixir module implementations"
-      
-      run _context do
-        RataDocs.Extractor.extract_all()
-      end
+    run _context do
+      RataDocs.Extractor.extract_all()
     end
+  end
+  
+  command :docs_generate do
+    description "Generate documentation files from extracted docstrings"
+    option :format, help: "Output format: markdown, typst, both", default: "both"
     
-    command :generate do
-      description "Generate documentation files from extracted docstrings"
-      option :format, help: "Output format: markdown, typst, both", default: "both"
-      
-      run context do
-        format = String.to_atom(context.format)
-        RataDocs.Generator.generate_all(format)
-      end
+    run context do
+      format = String.to_atom(context.format)
+      RataDocs.Generator.generate_all(format)
     end
+  end
+  
+  command :docs_module do
+    description "Show documentation for a specific module"
+    argument :module_name, help: "Name of the module (e.g. Math, Vector, Table)"
     
-    command :module do
-      description "Show documentation for a specific module"
-      argument :module_name, help: "Name of the module (e.g. Math, Vector, Table)"
-      
-      run context do
-        RataDocs.CLI.show_module(context.module_name)
-      end
+    run context do
+      RataDocs.CLI.show_module(context.module_name)
     end
+  end
+  
+  command :docs_search do
+    description "Search for functions across all modules"
+    argument :query, help: "Search term or pattern"
     
-    command :search do
-      description "Search for functions across all modules"
-      argument :query, help: "Search term or pattern"
-      
-      run context do
-        RataDocs.CLI.search(context.query)
-      end
+    run context do
+      RataDocs.CLI.search(context.query)
     end
   end
 
@@ -90,9 +82,12 @@ defmodule RataCli do
       IO.puts("Rata Programming Language CLI")
       IO.puts("")
       IO.puts("Available commands:")
-      IO.puts("  repl    - Start interactive REPL")
-      IO.puts("  docs    - Documentation tools and generation")
-      IO.puts("  help    - Show this help message")
+      IO.puts("  repl          - Start interactive REPL")
+      IO.puts("  docs_extract  - Extract docstrings from modules")
+      IO.puts("  docs_generate - Generate documentation files")
+      IO.puts("  docs_module   - Show documentation for specific module")
+      IO.puts("  docs_search   - Search for functions across modules")
+      IO.puts("  help          - Show this help message")
       IO.puts("")
       IO.puts("Use 'rata <command> --help' for more information about a command.")
     end

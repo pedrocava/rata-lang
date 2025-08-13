@@ -12,6 +12,6 @@ defmodule Rata do
   This function is called when the rata command is executed.
   """
   def main(argv) do
-    RataCli.run(argv)
+    ExCLI.run(argv, RataCli)
   end
 end

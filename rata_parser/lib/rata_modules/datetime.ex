@@ -27,8 +27,8 @@ defmodule RataModules.Datetime do
       
       # Wrapped version (safe error handling)
       case Datetime.ymd!("2024-01-15") do
-        {:ok, date} -> Log.info("Parsed: #{date}")
-        {:error, message} -> Log.error("Failed: #{message}")
+        {:ok, date} -> Log.info("Parsed: \#{date}")
+        {:error, message} -> Log.error("Failed: \#{message}")
       end
   """
 

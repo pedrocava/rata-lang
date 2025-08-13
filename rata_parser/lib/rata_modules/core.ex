@@ -10,6 +10,8 @@ defmodule RataModules.Core do
   - Data-first philosophy
   """
 
+  import Kernel, except: [is_boolean: 1, is_float: 1, is_function: 1, is_integer: 1, is_list: 1, is_map: 1, is_number: 1, is_tuple: 1]
+
   @doc """
   Assert function - verifies that a condition is true.
   Throws an error if the condition is false or falsy.
@@ -46,14 +48,14 @@ defmodule RataModules.Core do
   Type checking function - returns the type of a value as an atom.
   """
   def typeof(nil), do: {:ok, :nil}
-  def typeof(value) when is_boolean(value), do: {:ok, :boolean}
-  def typeof(value) when is_integer(value), do: {:ok, :integer}
-  def typeof(value) when is_float(value), do: {:ok, :float}
+  def typeof(value) when Kernel.is_boolean(value), do: {:ok, :boolean}
+  def typeof(value) when Kernel.is_integer(value), do: {:ok, :integer}
+  def typeof(value) when Kernel.is_float(value), do: {:ok, :float}
   def typeof(value) when is_binary(value), do: {:ok, :string}
   def typeof(value) when is_atom(value), do: {:ok, :symbol}
-  def typeof(value) when is_list(value), do: {:ok, :vector}
-  def typeof(value) when is_tuple(value), do: {:ok, :tuple}
-  def typeof(value) when is_map(value) and not is_struct(value), do: {:ok, :map}
+  def typeof(value) when Kernel.is_list(value), do: {:ok, :vector}
+  def typeof(value) when Kernel.is_tuple(value), do: {:ok, :tuple}
+  def typeof(value) when Kernel.is_map(value) and not Kernel.is_struct(value), do: {:ok, :map}
   def typeof(%MapSet{}), do: {:ok, :set}
   def typeof(%Range{}), do: {:ok, :range}
   def typeof(_), do: {:ok, :unknown}
@@ -149,49 +151,49 @@ defmodule RataModules.Core do
   @doc """
   Check if a value is a list.
   """
-  def is_list(value) when is_list(value), do: {:ok, true}
+  def is_list(value) when Kernel.is_list(value), do: {:ok, true}
   def is_list(_), do: {:ok, false}
 
   @doc """
   Check if a value is a vector (same as list in Rata).
   """
-  def is_vector(value) when is_list(value), do: {:ok, true}
+  def is_vector(value) when Kernel.is_list(value), do: {:ok, true}
   def is_vector(_), do: {:ok, false}
 
   @doc """
   Check if a value is a map.
   """
-  def is_map(value) when is_map(value) and not is_struct(value), do: {:ok, true}
+  def is_map(value) when Kernel.is_map(value) and not Kernel.is_struct(value), do: {:ok, true}
   def is_map(_), do: {:ok, false}
 
   @doc """
   Check if a value is a table (Explorer DataFrame).
   """
-  def is_table(%Explorer.DataFrame{}), do: {:ok, true}
+  # def is_table(%Explorer.DataFrame{}), do: {:ok, true}  # Temporarily disabled
   def is_table(_), do: {:ok, false}
 
   @doc """
   Check if a value is a boolean.
   """
-  def is_boolean(value) when is_boolean(value), do: {:ok, true}
+  def is_boolean(value) when Kernel.is_boolean(value), do: {:ok, true}
   def is_boolean(_), do: {:ok, false}
 
   @doc """
   Check if a value is an integer.
   """
-  def is_integer(value) when is_integer(value), do: {:ok, true}
+  def is_integer(value) when Kernel.is_integer(value), do: {:ok, true}
   def is_integer(_), do: {:ok, false}
 
   @doc """
   Check if a value is a float.
   """
-  def is_float(value) when is_float(value), do: {:ok, true}
+  def is_float(value) when Kernel.is_float(value), do: {:ok, true}
   def is_float(_), do: {:ok, false}
 
   @doc """
   Check if a value is a number (integer or float).
   """
-  def is_number(value) when is_number(value), do: {:ok, true}
+  def is_number(value) when Kernel.is_number(value), do: {:ok, true}
   def is_number(_), do: {:ok, false}
 
   @doc """
@@ -209,7 +211,7 @@ defmodule RataModules.Core do
   @doc """
   Check if a value is a tuple.
   """
-  def is_tuple(value) when is_tuple(value), do: {:ok, true}
+  def is_tuple(value) when Kernel.is_tuple(value), do: {:ok, true}
   def is_tuple(_), do: {:ok, false}
 
   @doc """
@@ -233,7 +235,7 @@ defmodule RataModules.Core do
   @doc """
   Check if a value is a function.
   """
-  def is_function(value) when is_function(value), do: {:ok, true}
+  def is_function(value) when Kernel.is_function(value), do: {:ok, true}
   def is_function(_), do: {:ok, false}
 
   @doc """

@@ -1,0 +1,12 @@
+{application,ex_cli,
+             [{modules,['Elixir.ExCLI','Elixir.ExCLI.App',
+                        'Elixir.ExCLI.Argument','Elixir.ExCLI.Command',
+                        'Elixir.ExCLI.DSL','Elixir.ExCLI.Formatter.Error',
+                        'Elixir.ExCLI.Formatter.Text',
+                        'Elixir.ExCLI.Normalizer','Elixir.ExCLI.Parser',
+                        'Elixir.ExCLI.Util']},
+              {optional_applications,[]},
+              {applications,[kernel,stdlib,elixir,logger]},
+              {description,"Library to build CLI applications"},
+              {registered,[]},
+              {vsn,"0.1.6"}]}.

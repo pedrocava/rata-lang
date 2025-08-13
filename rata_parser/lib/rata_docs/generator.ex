@@ -241,30 +241,23 @@ defmodule RataDocs.Generator do
       |> Enum.map(&build_typst_module_data_struct/1)
       |> Enum.join(",\n  ")
     
-    """
-    #let modules_data = (
-      #{modules_data}
-    )
-    """
+    "#let modules_data = (\n  #{modules_data}\n)\n"
   end
   
   defp build_typst_module_data(module_doc) do
     struct_data = build_typst_module_data_struct(module_doc)
     
-    """
-    #let module_name = "#{module_doc.name}"
-    #let module_description = "#{escape_typst_string(module_doc.module_doc || "")}"
-    #let module_functions = #{build_typst_functions_array(module_doc.functions)}
-    """
+    "#let module_name = \"#{module_doc.name}\"\n" <>
+    "#let module_description = \"#{escape_typst_string(module_doc.module_doc || "")}\"\n" <>
+    "#let module_functions = #{build_typst_functions_array(module_doc.functions)}\n"
   end
   
   defp build_typst_module_data_struct(module_doc) do
-    """
-    (
-        name: "#{module_doc.name}",
-        module_doc: "#{escape_typst_string(module_doc.module_doc || "")}",
-        functions: #{build_typst_functions_array(module_doc.functions)}
-      )"""
+    "(\n" <>
+    "    name: \"#{module_doc.name}\",\n" <>
+    "    module_doc: \"#{escape_typst_string(module_doc.module_doc || "")}\",\n" <>
+    "    functions: #{build_typst_functions_array(module_doc.functions)}\n" <>
+    "  )"
   end
   
   defp build_typst_functions_array(functions) do
@@ -276,22 +269,18 @@ defmodule RataDocs.Generator do
         |> Enum.map(&build_typst_function_struct/1)
         |> Enum.join(",\n    ")
       
-      """
-      (
-        #{func_data}
-      )"""
+      "(\n  #{func_data}\n)"
     end
   end
   
   defp build_typst_function_struct(function) do
     args_array = function.args |> Enum.map(&"\"#{&1}\"") |> Enum.join(", ")
     
-    """
-    (
-        name: "#{function.name}",
-        args: (#{args_array}),
-        doc: "#{escape_typst_string(function.doc || "")}"
-      )"""
+    "(\n" <>
+    "    name: \"#{function.name}\",\n" <>
+    "    args: (#{args_array}),\n" <>
+    "    doc: \"#{escape_typst_string(function.doc || "")}\"\n" <>
+    "  )"
   end
   
   defp escape_typst_string(nil), do: ""

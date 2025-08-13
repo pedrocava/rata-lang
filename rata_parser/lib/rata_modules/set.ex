@@ -11,8 +11,8 @@ defmodule RataModules.Set do
   Creates a new set from a vector of elements.
   
   Examples:
-    Set.new([1, 2, 3, 2]) -> {:ok, #{1, 2, 3}}
-    Set.new([])          -> {:ok, #{}}
+    Set.new([1, 2, 3, 2} -> {:ok, MapSet.new([1, 2, 3])}}
+    Set.new([])          -> {:ok, MapSet.new([])}
   """
   def new(elements) when is_list(elements) do
     set = MapSet.new(elements)
@@ -27,8 +27,8 @@ defmodule RataModules.Set do
   Adds an element to a set, returning a new set.
   
   Examples:
-    Set.add(#{1, 2}, 3) -> {:ok, #{1, 2, 3}}
-    Set.add(#{1, 2}, 1) -> {:ok, #{1, 2}}  # No duplicates
+    Set.add(MapSet.new([1, 2]), 3) -> {:ok, MapSet.new([1, 2, 3])}
+    Set.add(MapSet.new([1, 2]), 1) -> {:ok, MapSet.new([1, 2])}  # No duplicates
   """
   def add(%MapSet{} = set, element) do
     new_set = MapSet.put(set, element)
@@ -43,8 +43,8 @@ defmodule RataModules.Set do
   Removes an element from a set, returning a new set.
   
   Examples:
-    Set.delete(#{1, 2, 3}, 2) -> {:ok, #{1, 3}}
-    Set.delete(#{1, 3}, 2)    -> {:ok, #{1, 3}}  # Element not present
+    Set.delete(MapSet.new([1, 2, 3]), 2) -> {:ok, MapSet.new([1, 3])}
+    Set.delete(MapSet.new([1, 3]), 2)    -> {:ok, MapSet.new([1, 3])}  # Element not present
   """
   def delete(%MapSet{} = set, element) do
     new_set = MapSet.delete(set, element)
@@ -59,8 +59,8 @@ defmodule RataModules.Set do
   Checks if an element is a member of the set.
   
   Examples:
-    Set.member?(#{1, 2, 3}, 2) -> {:ok, true}
-    Set.member?(#{1, 3}, 2)    -> {:ok, false}
+    Set.member?(MapSet.new([1, 2, 3])}, 2) -> {:ok, true}
+    Set.member?(MapSet.new([1, 3]), 2)    -> {:ok, false}
   """
   def member?(%MapSet{} = set, element) do
     result = MapSet.member?(set, element)
@@ -75,8 +75,8 @@ defmodule RataModules.Set do
   Returns the number of elements in the set.
   
   Examples:
-    Set.size(#{1, 2, 3}) -> {:ok, 3}
-    Set.size(#{})        -> {:ok, 0}
+    Set.size(MapSet.new([1, 2, 3])}) -> {:ok, 3}
+    Set.size(MapSet.new([]))        -> {:ok, 0}
   """
   def size(%MapSet{} = set) do
     count = MapSet.size(set)
@@ -91,7 +91,7 @@ defmodule RataModules.Set do
   Returns the union of two sets.
   
   Examples:
-    Set.union(#{1, 2}, #{2, 3}) -> {:ok, #{1, 2, 3}}
+    Set.union(MapSet.new([1, 2]), MapSet.new([2, 3])) -> {:ok, MapSet.new([1, 2, 3])}
   """
   def union(%MapSet{} = set1, %MapSet{} = set2) do
     result = MapSet.union(set1, set2)
@@ -106,7 +106,7 @@ defmodule RataModules.Set do
   Returns the intersection of two sets.
   
   Examples:
-    Set.intersection(#{1, 2, 3}, #{2, 3, 4}) -> {:ok, #{2, 3}}
+    Set.intersection(MapSet.new([1, 2, 3]), MapSet.new([2, 3, 4])) -> {:ok, MapSet.new([2, 3])}
   """
   def intersection(%MapSet{} = set1, %MapSet{} = set2) do
     result = MapSet.intersection(set1, set2)
@@ -121,7 +121,7 @@ defmodule RataModules.Set do
   Returns the difference of two sets (elements in first set but not in second).
   
   Examples:
-    Set.difference(#{1, 2, 3}, #{2, 4}) -> {:ok, #{1, 3}}
+    Set.difference(MapSet.new([1, 2, 3]), MapSet.new([2, 4])) -> {:ok, MapSet.new([1, 3])}
   """
   def difference(%MapSet{} = set1, %MapSet{} = set2) do
     result = MapSet.difference(set1, set2)
@@ -136,7 +136,7 @@ defmodule RataModules.Set do
   Returns the symmetric difference of two sets (elements in either set but not in both).
   
   Examples:
-    Set.symmetric_difference(#{1, 2}, #{2, 3}) -> {:ok, #{1, 3}}
+    Set.symmetric_difference(MapSet.new([1, 2]), MapSet.new([2, 3])) -> {:ok, MapSet.new([1, 3])}
   """
   def symmetric_difference(%MapSet{} = set1, %MapSet{} = set2) do
     diff1 = MapSet.difference(set1, set2)
@@ -153,8 +153,8 @@ defmodule RataModules.Set do
   Checks if the first set is a subset of the second set.
   
   Examples:
-    Set.subset?(#{1, 2}, #{1, 2, 3}) -> {:ok, true}
-    Set.subset?(#{1, 4}, #{1, 2, 3}) -> {:ok, false}
+    Set.subset?(MapSet.new([1, 2]), MapSet.new([1, 2, 3])}) -> {:ok, true}
+    Set.subset?(MapSet.new([1, 4]), MapSet.new([1, 2, 3])}) -> {:ok, false}
   """
   def subset?(%MapSet{} = set1, %MapSet{} = set2) do
     result = MapSet.subset?(set1, set2)
@@ -169,8 +169,8 @@ defmodule RataModules.Set do
   Checks if two sets have no elements in common.
   
   Examples:
-    Set.disjoint?(#{1, 2}, #{3, 4}) -> {:ok, true}
-    Set.disjoint?(#{1, 2}, #{2, 3}) -> {:ok, false}
+    Set.disjoint?(MapSet.new([1, 2]), MapSet.new([3, 4])) -> {:ok, true}
+    Set.disjoint?(MapSet.new([1, 2]), MapSet.new([2, 3])) -> {:ok, false}
   """
   def disjoint?(%MapSet{} = set1, %MapSet{} = set2) do
     result = MapSet.disjoint?(set1, set2)
@@ -185,8 +185,8 @@ defmodule RataModules.Set do
   Checks if two sets are equal.
   
   Examples:
-    Set.equal?(#{1, 2}, #{2, 1}) -> {:ok, true}
-    Set.equal?(#{1, 2}, #{1, 3}) -> {:ok, false}
+    Set.equal?(MapSet.new([1, 2]), MapSet.new([2, 1])) -> {:ok, true}
+    Set.equal?(MapSet.new([1, 2]), MapSet.new([1, 3])) -> {:ok, false}
   """
   def equal?(%MapSet{} = set1, %MapSet{} = set2) do
     result = MapSet.equal?(set1, set2)
@@ -201,8 +201,8 @@ defmodule RataModules.Set do
   Checks if the set is empty.
   
   Examples:
-    Set.empty?(#{})     -> {:ok, true}
-    Set.empty?(#{1, 2}) -> {:ok, false}
+    Set.empty?(MapSet.new([]))     -> {:ok, true}
+    Set.empty?(MapSet.new([1, 2])) -> {:ok, false}
   """
   def empty?(%MapSet{} = set) do
     result = MapSet.size(set) == 0
@@ -217,7 +217,7 @@ defmodule RataModules.Set do
   Converts a set to a vector (list).
   
   Examples:
-    Set.to_vector(#{1, 2, 3}) -> {:ok, [1, 2, 3]}  # Order may vary
+    Set.to_vector(MapSet.new([1, 2, 3])) -> {:ok, [1, 2, 3]}  # Order may vary
   """
   def to_vector(%MapSet{} = set) do
     result = MapSet.to_list(set)
@@ -233,7 +233,7 @@ defmodule RataModules.Set do
   Alias for new/1 for consistency with other modules.
   
   Examples:
-    Set.from_vector([1, 2, 3, 2]) -> {:ok, #{1, 2, 3}}
+    Set.from_vector([1, 2, 3, 2]) -> {:ok, MapSet.new([1, 2, 3])}
   """
   def from_vector(elements) when is_list(elements) do
     new(elements)
@@ -247,8 +247,8 @@ defmodule RataModules.Set do
   Returns an arbitrary element from the set, or error if empty.
   
   Examples:
-    Set.first(#{1, 2, 3}) -> {:ok, 1}  # Could be any element
-    Set.first(#{})        -> {:error, "Set is empty"}
+    Set.first(MapSet.new([1, 2, 3])) -> {:ok, 1}  # Could be any element
+    Set.first(MapSet.new([]))        -> {:error, "Set is empty"}
   """
   def first(%MapSet{} = set) do
     case MapSet.to_list(set) do
