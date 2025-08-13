@@ -43,10 +43,14 @@ is_complete = false
 greeting = "Hello, World!"
 multiline = "This is a
 multiline string"
+triple_quotes = """
+this is a string!
+"""
 
 # Symbols (atoms)
 status = :ok
 category = :error
+something = :nice
 ```
 
 ## Variables and Assignment
@@ -55,13 +59,6 @@ category = :error
 # Simple assignment
 name = "Alice"
 age = 30
-
-# Multiple assignment (destructuring)
-{first_name, last_name} = {"John", "Doe"}
-
-# Assignment with type annotations
-user_id: int = 12345
-score: float = 98.5
 ```
 
 ## Functions
@@ -70,15 +67,16 @@ score: float = 98.5
 ```rata
 # Basic function
 greet = function(name) {
-  f"Hello, {name}!"
+  return f"Hello, {name}!"
 }
 
 # Function with type annotations
 add = function(a: numeric, b: numeric) {
-  a + b
+  return a + b
 }
 
 # Function with default parameters
+# The return keyword is optional if the function's body is single expression
 power = function(base, exponent: int = 2) {
   base ^ exponent
 }
@@ -86,7 +84,6 @@ power = function(base, exponent: int = 2) {
 
 ### Anonymous Functions and Lambdas
 ```rata
-# Anonymous function
 square = function(x) { x * x }
 
 # Lambda syntax (shorthand)
@@ -189,11 +186,11 @@ user = {
 }
 
 # Map access
-user_name = user.name           # "Alice Johnson"
-user_id = user[:id]             # 123
+user_id = user.get(:id)
 
 # Map manipulation
-updated_user = user |> Maps.put(age: 30)
+updated_user = user |> 
+  Maps.put(age: 30)
 ```
 
 ### Sets
@@ -210,9 +207,22 @@ new_tags = Set.union(tags, #{:completed})   # #{:urgent, :important, :review, :c
 ```rata
 # Table creation
 data = Table.from_map({
-  name: ["Alice", "Bob", "Charlie"],
+  name: ["Alice", "Breno", "Carlos"],
   age: [25, 30, 35],
-  city: ["NYC", "LA", "Chicago"]
+  city: ["Rio", "São Paulo", "Porto Alegre"],
+  docs: {
+    {
+      cpf: 12345678910, 
+      rg: 321654984
+    },
+    {
+      cpf: 22345678911, 
+      rg: 822654987},
+    {
+      cpf: 32345678913, 
+      rg: 531654989
+    }
+    }
 })
 
 # Table operations (dplyr-style)
