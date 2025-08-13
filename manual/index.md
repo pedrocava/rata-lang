@@ -23,37 +23,6 @@ Welcome to the comprehensive manual for the Rata programming language - a data e
 
 ---
 
-## Quick Reference
-
-### Key Features
-- **Data-first**: Built specifically for data engineering workflows
-- **1-indexed**: Following R conventions for data work  
-- **No scalars**: Every value is a vector (even single values)
-- **Immutable by default**: Functional programming approach
-- **REPL-first**: Interactive development experience
-- **Pattern matching**: Elixir-style error handling with `{:ok, result}` and `{:error, message}`
-- **Optional typing**: Add types when you need them: `function(n: int) { n + 1 }`
-
-### Hello World
-```rata
-# Traditional hello world
-Log.info("Hello, World!")
-
-# More idiomatic Rata - working with data
-library Table as t
-library Math as m
-
-data = t.from_map({
-  name: ["Alice", "Bob", "Charlie"],
-  age: [25, 30, 35]
-})
-
-data
-  |> t.mutate(age_next_year: age + 1)
-  |> t.filter(age > 28)
-  |> Log.info()
-```
-
 ### Standard Library Overview
 - **[Core](modules/core.md)** - Basic language primitives and control flow
 - **[Math](modules/math.md)** - Mathematical functions and operators
