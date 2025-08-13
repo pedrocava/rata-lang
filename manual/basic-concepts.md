@@ -370,20 +370,6 @@ table = Dataload.read_csv!("data.csv")  # Raises if file doesn't exist
 process_table(table)
 ```
 
-### Try-Catch (Coming Soon)
-```rata
-# Future syntax for exception handling
-result = try {
-  data = Dataload.read_csv!("risky_file.csv")
-  transform_data(data)
-} catch {
-  FileError -> default_data()
-  :parse_error as e -> 
-    Log.error(f"Parse failed: {e}")
-    nil
-}
-```
-
 ## Putting It All Together
 
 Here's a complete example showing many of these concepts:
