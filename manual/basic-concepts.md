@@ -277,6 +277,8 @@ process_response = function(response) {
 
 ## Pattern Matching
 
+If-else chains can route code depending on logical statements. Pattern Matching is a way of ergonomically representing complex routing logic.
+
 ### Basic Patterns
 ```rata
 # Match exact values
@@ -376,7 +378,7 @@ result = try {
   transform_data(data)
 } catch {
   FileError -> default_data()
-  ParseError as e -> 
+  :parse_error as e -> 
     Log.error(f"Parse failed: {e}")
     nil
 }
