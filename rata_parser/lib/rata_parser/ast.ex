@@ -102,13 +102,13 @@ defmodule RataParser.AST do
   end
 
   defmodule Tuple do
-    @moduledoc "Represents list literals: {1, :two, "three"}, {:ok, value}"
+    @moduledoc "Represents list literals: {1, :two, \"three\"}, {:ok, value}"
     defstruct [:elements]
     @type t :: %__MODULE__{elements: [Expression.t()]}
   end
 
   defmodule Set do
-    @moduledoc "Represents set literals: #{1, 2, 3}"
+    @moduledoc "Represents set literals: {1, 2, 3}"
     defstruct [:elements]
     @type t :: %__MODULE__{elements: [Expression.t()]}
   end
@@ -249,35 +249,8 @@ defmodule RataParser.AST do
     @type t :: %__MODULE__{name: String.t(), type: String.t() | nil}
   end
 
-  # Type unions for convenience
-  @type Statement :: LibraryImport.t() | Assignment.t() | FunctionDef.t() | Return.t() | AssertStatement.t() | RaiseStatement.t() | ReraisStatement.t()
-  @type Expression ::
-          Literal.t()
-          | InterpolatedString.t()
-          | Docstring.t()
-          | Symbol.t()
-          | Tuple.t()
-          | Set.t()
-          | Vector.t()
-          | Range.t()
-          | Map.t()
-          | Identifier.t()
-          | QualifiedIdentifier.t()
-          | FunctionCall.t()
-          | BinaryOp.t()
-          | If.t()
-          | Function.t()
-          | Lambda.t()
-          | LambdaParam.t()
-          | Pipe.t()
-          | TryExpression.t()
-          | CaseExpression.t()
-          | Underscore.t()
-
-  @type Pattern ::
-          TuplePattern.t()
-          | SymbolPattern.t()
-          | LiteralPattern.t()
-          | IdentifierPattern.t()
-          | WildcardPattern.t()
+  # Type unions for convenience - temporarily commented out to fix compilation
+  # @type Statement :: LibraryImport.t() | Assignment.t() | FunctionDef.t() | Return.t() | AssertStatement.t() | RaiseStatement.t() | ReraisStatement.t()
+  # @type Expression :: Literal.t() | InterpolatedString.t() | Docstring.t() | Symbol.t() | Tuple.t() | Set.t() | Vector.t() | Range.t() | Map.t() | Identifier.t() | QualifiedIdentifier.t() | FunctionCall.t() | BinaryOp.t() | If.t() | Function.t() | Lambda.t() | LambdaParam.t() | Pipe.t() | TryExpression.t() | CaseExpression.t() | Underscore.t()
+  # @type Pattern :: TuplePattern.t() | SymbolPattern.t() | LiteralPattern.t() | IdentifierPattern.t() | WildcardPattern.t()
 end

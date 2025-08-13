@@ -104,7 +104,7 @@ defmodule RataParser.Lexer do
 
   # Docstrings (triple-quoted strings) - must come before regular strings
   docstring = 
-    ignore(string("\"\"\""))
+    ignore(ascii_string([34, 34, 34], 3))
     |> repeat(
       choice([
         string("\\\"") |> replace(?"),
@@ -113,11 +113,11 @@ defmodule RataParser.Lexer do
         string("\\t") |> replace(?\t),
         string("\\r") |> replace(?\r),
         # Allow any character except the ending triple quote sequence
-        lookahead_not(string("\"\"\""))
+        lookahead_not(ascii_string([34, 34, 34], 3))
         |> utf8_char([])
       ])
     )
-    |> ignore(string("\"\"\""))
+    |> ignore(ascii_string([34, 34, 34], 3))
     |> reduce({__MODULE__, :to_docstring, []})
     |> unwrap_and_tag(:docstring)
 

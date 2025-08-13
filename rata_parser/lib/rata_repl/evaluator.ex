@@ -17,6 +17,7 @@ defmodule RataRepl.Evaluator do
   alias RataModules.Set
   alias RataModules.Enum
   alias RataModules.File
+  alias RataModules.Json
 
   @doc """
   Evaluate an AST node in the given context.
@@ -501,6 +502,20 @@ defmodule RataRepl.Evaluator do
       {:error, "undefined function: Enum.#{function_name}"}
     end
   end
+
+  defp resolve_module_function("Json", function_name) do
+    function_atom = String.to_atom(function_name)
+    if function_exported?(Json, function_atom, 0) do
+      {:ok, {Json, function_atom}}
+    elsif function_exported?(Json, function_atom, 1) do
+      {:ok, {Json, function_atom}}
+    elsif function_exported?(Json, function_atom, 2) do
+      {:ok, {Json, function_atom}}
+    else
+      {:error, "undefined function: Json.#{function_name}"}
+    end
+  end
+
   defp resolve_module_function(module_name, function_name) do
     {:error, "undefined module: #{module_name}"}
   end
